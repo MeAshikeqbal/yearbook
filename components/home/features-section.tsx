@@ -21,31 +21,33 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="container mx-auto max-w-7xl px-4 md:px-6 py-20 md:py-28">
-      <div className="text-center mb-16">
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">What You Can Do Here</h2>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+    <section className="container mx-auto max-w-7xl px-4 md:px-6 py-16 md:py-20 lg:py-28">
+      <div className="text-center mb-12 md:mb-16">
+        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-3 md:mb-4 px-4">
+          What You Can Do Here
+        </h2>
+        <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
           Everything you need to create lasting memories with your classmates
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
         {features.map((feature, index) => {
           const Icon = feature.icon
           return (
             <Card
               key={index}
-              className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-lg group"
+              className="border-2 hover:border-primary/50 transition-all duration-200 hover:shadow-lg group"
             >
-              <CardContent className="pt-8 pb-8 text-center space-y-4">
+              <CardContent className="pt-6 md:pt-8 pb-6 md:pb-8 text-center space-y-3 md:space-y-4">
                 <div className="flex justify-center">
-                  <div className="rounded-2xl bg-primary/10 p-4 group-hover:bg-primary/20 transition-colors">
-                    <Icon className="h-10 w-10 text-primary" />
+                  <div className="rounded-2xl bg-primary/10 p-3 md:p-4 group-hover:bg-primary/20 transition-colors">
+                    <Icon className="h-8 w-8 md:h-10 md:w-10 text-primary" />
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-bold text-xl mb-3">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                  <h3 className="font-bold text-lg md:text-xl mb-2 md:mb-3">{feature.title}</h3>
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{feature.description}</p>
                 </div>
               </CardContent>
             </Card>

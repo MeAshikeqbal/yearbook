@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { BookOpen } from "lucide-react"
 
-export function SiteFooter() {
+export function Footer() {
   return (
     <footer className="border-t bg-muted/30">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 py-12">

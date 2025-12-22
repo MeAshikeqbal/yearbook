@@ -21,7 +21,7 @@ const privacyPoints = [
 
 export function PrivacySection() {
   return (
-    <section className="container mx-auto max-w-7xl px-4 md:px-6 py-20 bg-muted/30">
+    <section className="container mx-auto max-w-7xl px-4 md:px-6 py-20">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">Your Privacy Matters</h2>

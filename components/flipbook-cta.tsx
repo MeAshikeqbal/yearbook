@@ -6,7 +6,7 @@ import { Sparkles } from "lucide-react"
 export function FlipbookCTA() {
   return (
     <section className="container mx-auto max-w-7xl px-4 md:px-6 py-20">
-      <Card className="max-w-4xl mx-auto bg-gradient-to-br from-secondary to-secondary/80 border-0 overflow-hidden relative">
+      <Card className="max-w-4xl mx-auto bg-linear-to-br from-secondary to-secondary/80 border-0 overflow-hidden relative">
         <CardContent className="pt-12 pb-12 text-center space-y-6 relative z-10">
           <div className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-4 py-2 rounded-full text-sm font-semibold">
             <Sparkles className="h-4 w-4" />
@@ -22,12 +22,12 @@ export function FlipbookCTA() {
           </p>
 
           <Button
-            variant="secondary"
+            variant="ghost"
             size="lg"
             className="h-14 px-8 text-lg bg-background hover:bg-background/90"
             asChild
           >
-            <Link href="/flipbook-preview">View Flipbook Preview</Link>
+            <Link href="/flipbook">View Flipbook Preview</Link>
           </Button>
         </CardContent>
 

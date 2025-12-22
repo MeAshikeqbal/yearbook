@@ -124,4 +124,24 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Add smooth scrolling with hardware acceleration for better performance */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Optimize animations for performance */
+  @media (prefers-reduced-motion: no-preference) {
+    :focus-visible {
+      transition: outline-offset 145ms cubic-bezier(0.25, 0, 0.4, 1);
+    }
+    * {
+      scroll-behavior: smooth;
+    }
+  }
 }
