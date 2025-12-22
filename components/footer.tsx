@@ -79,7 +79,7 @@ export function Footer() {
             administration.
           </p>
           <p className="text-xs text-muted-foreground text-center mt-2">
-            © 2025 Class of 2026 Yearbook. All rights reserved.
+            © {new Date().getFullYear()} Class of 2026 Yearbook. All rights reserved.
           </p>
         </div>
       </div>
