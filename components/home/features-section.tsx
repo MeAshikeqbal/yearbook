@@ -19,6 +19,13 @@ const features = [
   },
 ]
 
+/**
+ * Render the features section with a header, subtitle, and a responsive grid of feature cards.
+ *
+ * Each card displays an icon, title, and description and adapts across breakpoints from two to three columns.
+ *
+ * @returns A JSX element containing the section with header, subtitle, and responsive grid of feature cards.
+ */
 export function FeaturesSection() {
   return (
     <section className="container mx-auto max-w-7xl px-4 md:px-6 py-16 md:py-20 lg:py-28">

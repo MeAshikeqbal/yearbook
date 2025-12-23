@@ -6,6 +6,14 @@ import { FlipbookCTA } from "@/components/flipbook-cta"
 import { PrivacySection } from "@/components/home/privacy-section"
 import { Footer } from "@/components/footer"
 
+/**
+ * Top-level home page component that composes header, main content sections, and footer.
+ *
+ * Renders Header, a <main> element containing HeroSection, FeaturesSection, WhoItsFor, FlipbookCTA,
+ * and PrivacySection, followed by Footer.
+ *
+ * @returns The page's JSX element containing the header, main content sections, and footer.
+ */
 export default function Home() {
   return (
     <>
