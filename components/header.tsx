@@ -6,6 +6,14 @@ import { BookOpen, Menu, X } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useState } from "react"
 
+/**
+ * Render a responsive sticky site header with brand/logo, navigation links, a theme toggle, and a mobile menu.
+ *
+ * The header shows a full navigation bar on medium and larger viewports and a compact header with a toggleable
+ * mobile menu on small viewports. Mobile navigation closes when a link or the join action is activated.
+ *
+ * @returns The header JSX element containing the site's navigation and controls.
+ */
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
