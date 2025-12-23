@@ -3,6 +3,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import Link from "next/link"
 import { Sparkles } from "lucide-react"
 
+/**
+ * Displays a centered call-to-action card that promotes the flipbook preview.
+ *
+ * The card includes a "New Feature" badge, headline, descriptive text, decorative background elements, and a button linking to `/flipbook`.
+ *
+ * @returns A JSX element containing the CTA section with the badge, heading, description, decorative visuals, and a link to the flipbook preview.
+ */
 export function FlipbookCTA() {
   return (
     <section className="container mx-auto max-w-7xl px-4 md:px-6 py-20">

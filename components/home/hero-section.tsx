@@ -1,6 +1,15 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
+/**
+ * Render the hero section for the yearbook landing area.
+ *
+ * Includes a badge for "Class of 2026", a prominent title with a colored emphasis on "Our Story",
+ * a descriptive paragraph, primary action buttons linking to `/join` and `/browse`, and decorative
+ * background elements which are hidden on small screens.
+ *
+ * @returns The JSX element representing the hero section markup.
+ */
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-linear-to-br from-background via-primary/5 to-accent/10 min-h-svh">
