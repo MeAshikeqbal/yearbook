@@ -1,3 +1,10 @@
+/**
+ * Render a centered badge indicating eligibility for SKF Class of 2026 students.
+ *
+ * Renders a responsive section containing a centered container with a stylized inline badge that states "For SKF Class of 2026 students only" and a muted note that participation is voluntary and opt-in.
+ *
+ * @returns A JSX element with the eligibility badge and opt-in note.
+ */
 export function WhoItsFor() {
   return (
     <section className="container mx-auto max-w-7xl px-4 md:px-6 py-16">
