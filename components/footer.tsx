@@ -1,6 +1,11 @@
 import Link from "next/link"
 import { BookOpen } from "lucide-react"
 
+/**
+ * Render the site's responsive footer with branding, navigation links, and an affiliation disclaimer.
+ *
+ * @returns The footer JSX element containing the brand section, Quick Links, Resources, Connect columns, and a copyright/disclaimer area.
+ */
 export function Footer() {
   return (
     <footer className="border-t bg-muted/30">

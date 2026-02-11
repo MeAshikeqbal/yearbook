@@ -19,6 +19,13 @@ const privacyPoints = [
   },
 ]
 
+/**
+ * Render a privacy information section with a heading and a responsive grid of privacy point cards.
+ *
+ * Each card displays an icon, a bold title, and a descriptive paragraph arranged in a three-column layout on medium and larger screens.
+ *
+ * @returns A JSX element containing the privacy section markup
+ */
 export function PrivacySection() {
   return (
     <section className="container mx-auto max-w-7xl px-4 md:px-6 py-20">
