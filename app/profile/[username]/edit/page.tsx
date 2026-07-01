@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import ProfileEditorClient from "./editor-client"
+import ProfileEditorClient from "@/components/profile/edit/editor-client"
 
 export const dynamic = "force-dynamic";
 

@@ -1,6 +1,6 @@
 import React from "react"
 import { prisma } from "@/lib/prisma"
-import BrowseClient from "./browse-client"
+import BrowseClient from "@/components/browse/browse-client"
 
 // Server component to fetch approved students directly from PostgreSQL
 export const dynamic = "force-dynamic";

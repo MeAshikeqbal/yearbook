@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Save, Terminal, Loader2, ArrowLeft } from "lucide-react"
 
-// Import custom broken-down components
-import { ConfigForm } from "./components/config-form"
-import { MetricsEditor } from "./components/metrics-editor"
-import { LiveSandbox } from "./components/live-sandbox"
+// Import custom components locally
+import { ConfigForm } from "./config-form"
+import { MetricsEditor } from "./metrics-editor"
+import { LiveSandbox } from "./live-sandbox"
 
 interface StudentData {
   username: string
