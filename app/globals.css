@@ -223,3 +223,26 @@
     }
   }
 }
+
+/* Custom CSS inheritance mappings for React Bits ProfileCard overrides */
+.profile-card {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.profile-card .pc-card {
+  background: inherit !important;
+  background-image: inherit !important;
+  background-color: inherit !important;
+  border-color: inherit !important;
+  border-width: inherit !important;
+  border-style: inherit !important;
+}
+
+.profile-card .pc-inside {
+  background: inherit !important;
+  background-image: inherit !important;
+  background-color: inherit !important;
+}
+

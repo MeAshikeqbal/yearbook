@@ -42,7 +42,7 @@ export function LiveSandbox({
       <div className="preview-card-wrapper p-6 border border-border bg-background rounded-xl flex flex-col items-center justify-center space-y-6">
         
         {/* Profile Card Mock */}
-        <div className="w-full max-w-sm">
+        <div className="profile-card w-full max-w-sm">
           <ProfileCard
             name={name || "Your Name"}
             title={role || "CSE Student"}

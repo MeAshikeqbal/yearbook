@@ -68,25 +68,27 @@ export function ProfileView({ student, isOwner, isApproved }: ProfileViewProps) 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           
           {/* Left Column: Avatar & Socials with 3D Tilt */}
-          <div className="space-y-4">
-            <ProfileCard
-              name={student.name}
-              title={student.role}
-              handle={student.username}
-              status={`🐛 ${stats.bugsFixed ?? 0} / ☕ ${stats.coffeeConsumed ?? 0}`}
-              contactText="GitHub"
-              avatarUrl={student.avatarUrl || "https://placehold.co/150"}
-              showUserInfo={true}
-              enableTilt={true}
-              enableMobileTilt={false}
-              behindGlowEnabled={true}
-              behindGlowColor="rgba(var(--primary-rgb, 125, 190, 255), 0.35)"
-              behindGlowSize="45%"
-              innerGradient="linear-gradient(145deg, rgba(30,30,46,0.85) 0%, rgba(20,20,30,0.95) 100%)"
-              onContactClick={() => {
-                if (student.github) window.open(student.github, "_blank");
-              }}
-            />
+          <div className="space-y-4 flex flex-col items-center">
+            <div className="profile-card w-full max-w-sm">
+              <ProfileCard
+                name={student.name}
+                title={student.role}
+                handle={student.username}
+                status={`🐛 ${stats.bugsFixed ?? 0} / ☕ ${stats.coffeeConsumed ?? 0}`}
+                contactText="GitHub"
+                avatarUrl={student.avatarUrl || "https://placehold.co/150"}
+                showUserInfo={true}
+                enableTilt={true}
+                enableMobileTilt={false}
+                behindGlowEnabled={true}
+                behindGlowColor="rgba(var(--primary-rgb, 125, 190, 255), 0.35)"
+                behindGlowSize="45%"
+                innerGradient="linear-gradient(145deg, rgba(30,30,46,0.85) 0%, rgba(20,20,30,0.95) 100%)"
+                onContactClick={() => {
+                  if (student.github) window.open(student.github, "_blank");
+                }}
+              />
+            </div>
             
             {/* Social Links under Card */}
             {(student.github || student.linkedin) && (
