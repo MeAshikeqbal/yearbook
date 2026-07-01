@@ -1,10 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *, .dark-commit *, .dracula *, .matrix-hacker *));
 
 :root {
-  /* Updated to vibrant coral/orange primary with teal and amber accents for a youthful, energetic yearbook feel */
+  /* Default light theme variables */
   --background: oklch(0.99 0 0);
   --foreground: oklch(0.15 0 0);
   --card: oklch(1 0 0);
@@ -38,6 +38,84 @@
   --sidebar-accent-foreground: oklch(0.15 0 0);
   --sidebar-border: oklch(0.9 0.005 75);
   --sidebar-ring: oklch(0.62 0.19 25);
+}
+
+.light-code {
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0 0);
+  --primary: oklch(0.55 0.18 240); /* Monospace tech blue */
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.01 240);
+  --secondary-foreground: oklch(0.15 0 0);
+  --muted: oklch(0.96 0.005 240);
+  --muted-foreground: oklch(0.5 0.01 240);
+  --border: oklch(0.92 0.005 240);
+  --input: oklch(0.92 0.005 240);
+  --ring: oklch(0.55 0.18 240);
+}
+
+.dark-commit {
+  --background: oklch(0.14 0.015 160); /* Deep dark slate-green */
+  --foreground: oklch(0.95 0.01 160);
+  --card: oklch(0.17 0.015 160);
+  --card-foreground: oklch(0.95 0.01 160);
+  --popover: oklch(0.17 0.015 160);
+  --popover-foreground: oklch(0.95 0.01 160);
+  --primary: oklch(0.72 0.16 140); /* Git commit green */
+  --primary-foreground: oklch(0.12 0.015 160);
+  --secondary: oklch(0.22 0.02 160);
+  --secondary-foreground: oklch(0.95 0.01 160);
+  --muted: oklch(0.24 0.02 160);
+  --muted-foreground: oklch(0.65 0.02 160);
+  --accent: oklch(0.7 0.12 200);
+  --accent-foreground: oklch(0.95 0.01 160);
+  --border: oklch(0.26 0.02 160);
+  --input: oklch(0.26 0.02 160);
+  --ring: oklch(0.72 0.16 140);
+}
+
+.dracula {
+  --background: oklch(0.18 0.02 290); /* Dracula deep purple-gray */
+  --foreground: oklch(0.95 0.01 290);
+  --card: oklch(0.21 0.02 290);
+  --card-foreground: oklch(0.95 0.01 290);
+  --popover: oklch(0.21 0.02 290);
+  --popover-foreground: oklch(0.95 0.01 290);
+  --primary: oklch(0.7 0.22 330); /* Dracula pink */
+  --primary-foreground: oklch(0.15 0.02 290);
+  --secondary: oklch(0.25 0.03 290);
+  --secondary-foreground: oklch(0.95 0.01 290);
+  --muted: oklch(0.26 0.02 290);
+  --muted-foreground: oklch(0.65 0.03 290);
+  --accent: oklch(0.82 0.15 100); /* yellow */
+  --accent-foreground: oklch(0.15 0.02 290);
+  --border: oklch(0.28 0.02 290);
+  --input: oklch(0.28 0.02 290);
+  --ring: oklch(0.7 0.22 330);
+}
+
+.matrix-hacker {
+  --background: oklch(0.05 0 0); /* Pure cyber black */
+  --foreground: oklch(0.85 0.25 140); /* Matrix phosphorescent green */
+  --card: oklch(0.08 0.01 140);
+  --card-foreground: oklch(0.85 0.25 140);
+  --popover: oklch(0.08 0.01 140);
+  --popover-foreground: oklch(0.85 0.25 140);
+  --primary: oklch(0.85 0.25 140); /* Neon green */
+  --primary-foreground: oklch(0.05 0 0);
+  --secondary: oklch(0.15 0.05 140);
+  --secondary-foreground: oklch(0.85 0.25 140);
+  --muted: oklch(0.16 0.04 140);
+  --muted-foreground: oklch(0.6 0.15 140);
+  --accent: oklch(0.85 0.25 140);
+  --accent-foreground: oklch(0.05 0 0);
+  --border: oklch(0.22 0.08 140);
+  --input: oklch(0.22 0.08 140);
+  --ring: oklch(0.85 0.25 140);
 }
 
 .dark {
