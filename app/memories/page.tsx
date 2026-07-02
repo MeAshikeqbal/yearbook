@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, getCsrfToken } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { 
@@ -76,10 +76,14 @@ export default function MemoriesPage() {
     setUploadError("")
 
     try {
+      const csrfToken = await getCsrfToken();
       // 1. Request presigned URL from R2 API
       const urlRes = await fetch("/api/upload-url", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken || "",
+        },
         body: JSON.stringify({
           filename: file.name,
           contentType: file.type,
@@ -108,7 +112,10 @@ export default function MemoriesPage() {
       // 3. Create database entry
       const dbRes = await fetch("/api/memories", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken || "",
+        },
         body: JSON.stringify({
           imageUrl: publicUrl,
           description,

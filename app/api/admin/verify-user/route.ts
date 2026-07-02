@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { verifyCsrf } from "@/lib/csrf";
 
 export async function POST(req: Request) {
   try {
+    // 1. Verify CSRF
+    const isCsrfValid = await verifyCsrf(req);
+    if (!isCsrfValid) {
+      return NextResponse.json({ error: "Invalid CSRF headers" }, { status: 403 });
+    }
+
     const session = await getServerSession(authOptions);
 
     // Verify session and ADMIN or MODERATOR role
@@ -12,15 +19,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { userId, action } = await req.json();
+    const { userId, action, reason } = await req.json();
 
     if (!userId || !action) {
       return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
     }
 
-    // Fetch target user to check their role
+    // Fetch target user with student profile to check their role and get their name
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
+      include: { studentProfile: true }
     });
 
     if (!targetUser) {
@@ -36,6 +44,24 @@ export async function POST(req: Request) {
     if (action === "DELETE" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden: Only Administrators can delete accounts." }, { status: 403 });
     }
+
+    const logReason = reason || (
+      action === "APPROVE" ? "Valid Student ID card" :
+      action === "REJECT" ? "Registration rejected/account suspended" :
+      "Account deleted"
+    );
+
+    // Create moderation log entry
+    await prisma.moderationLog.create({
+      data: {
+        adminId: session.user.id,
+        adminName: session.user.name || session.user.username,
+        targetId: userId,
+        targetName: targetUser.studentProfile?.name || targetUser.email,
+        action,
+        reason: logReason,
+      }
+    });
 
     if (action === "APPROVE") {
       await prisma.user.update({
@@ -63,3 +89,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+

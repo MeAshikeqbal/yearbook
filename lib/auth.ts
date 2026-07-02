@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
+import { rateLimit } from "./rate-limiter";
 import "next-auth";
 
 declare module "next-auth" {
@@ -67,8 +68,17 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Missing email or password");
         }
 
+        const email = credentials.email.toLowerCase().trim();
+        const lockoutKey = `rate:auth:email:${email}`;
+
+        // Check lock out: max 5 failed attempts within a 15-minute window
+        const limiter = await rateLimit(lockoutKey, 5, 15 * 60 * 1000);
+        if (!limiter.success) {
+          throw new Error("Too many failed login attempts. Your account is locked for 15 minutes.");
+        }
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
           include: { studentProfile: true },
         });
 
@@ -79,6 +89,15 @@ export const authOptions: NextAuthOptions = {
         const isPasswordCorrect = await bcrypt.compare(credentials.password, user.password);
         if (!isPasswordCorrect) {
           throw new Error("Invalid email or password");
+        }
+
+        // On successful authentication, delete the lockout rate limit record
+        try {
+          await prisma.rateLimit.delete({
+            where: { key: lockoutKey },
+          });
+        } catch {
+          // Ignore if key didn't exist
         }
 
         return {
@@ -212,6 +231,9 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60, // 7 days
+    updateAge: 24 * 60 * 60, // 24 hours sliding refresh
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+

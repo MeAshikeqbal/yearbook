@@ -56,3 +56,34 @@ model Bug {
   reporter    String   // display name or username
   createdAt   DateTime @default(now())
 }
+
+model EmailVerification {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  otp       String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ModerationLog {
+  id          String   @id @default(uuid())
+  adminId     String
+  adminName   String
+  targetId    String
+  targetName  String
+  action      String   // "APPROVE", "REJECT", "SUSPEND", "UNSUSPEND", "DELETE"
+  reason      String?  @db.Text
+  createdAt   DateTime @default(now())
+}
+
+model RateLimit {
+  id        String   @id @default(uuid())
+  key       String   @unique // e.g. "rate:auth:email:user@example.com"
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+

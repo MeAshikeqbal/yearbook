@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, getCsrfToken } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ShieldAlert, CheckCircle, XCircle, Trash2, Users, Loader2 } from "lucide-react"
+import { ShieldAlert, CheckCircle, XCircle, Trash2, Users, Loader2, History, X } from "lucide-react"
 
 interface StudentProfile {
   username: string
@@ -25,14 +25,31 @@ interface UserData {
   studentProfile?: StudentProfile
 }
 
+interface ModerationLog {
+  id: string
+  adminId: string
+  adminName: string
+  targetId: string
+  targetName: string
+  action: string
+  reason: string | null
+  createdAt: string
+}
+
 export default function AdminPage() {
   const { data: session, status: sessionStatus } = useSession()
   const router = useRouter()
   const [users, setUsers] = useState<UserData[]>([])
+  const [logs, setLogs] = useState<ModerationLog[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [selectedIdPhoto, setSelectedIdPhoto] = useState<string | null>(null)
+
+  // Reason Modal states
+  const [reasonModalOpen, setReasonModalOpen] = useState(false)
+  const [pendingAction, setPendingAction] = useState<{ userId: string; action: "APPROVE" | "REJECT" | "DELETE" } | null>(null)
+  const [moderationReason, setModerationReason] = useState("")
 
   useEffect(() => {
     if (sessionStatus === "unauthenticated") {
@@ -47,35 +64,78 @@ export default function AdminPage() {
       sessionStatus === "authenticated" &&
       (session.user.role === "ADMIN" || session.user.role === "MODERATOR")
     ) {
-      fetchUsers()
+      fetchData()
     }
   }, [sessionStatus, session, router])
 
-  const fetchUsers = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true)
-      const res = await fetch("/api/admin/users")
-      if (!res.ok) {
-        throw new Error("Failed to fetch users")
-      }
-      const data = await res.json()
-      setUsers(data.users || [])
+      await Promise.all([fetchUsers(), fetchLogs()])
     } catch (err) {
-      setError("Failed to load users list")
+      setError("Failed to load control center data")
     } finally {
       setLoading(false)
     }
   }
 
-  const handleAction = async (userId: string, action: "APPROVE" | "REJECT" | "DELETE") => {
+  const fetchUsers = async () => {
+    const res = await fetch("/api/admin/users")
+    if (!res.ok) {
+      throw new Error("Failed to fetch users")
+    }
+    const data = await res.json()
+    setUsers(data.users || [])
+  }
+
+  const fetchLogs = async () => {
+    try {
+      const res = await fetch("/api/admin/moderation-logs")
+      if (res.ok) {
+        const data = await res.json()
+        setLogs(data.logs || [])
+      }
+    } catch (err) {
+      console.error("Failed to fetch logs", err)
+    }
+  }
+
+  const triggerActionPrompt = (userId: string, action: "APPROVE" | "REJECT" | "DELETE") => {
+    setPendingAction({ userId, action })
+    
+    // Set default preset reasons
+    if (action === "APPROVE") {
+      setModerationReason("Valid Student ID card verified")
+    } else if (action === "REJECT") {
+      setModerationReason("Student ID blurry or verification failed")
+    } else {
+      setModerationReason("Spam or inactive profile deletion")
+    }
+    
+    setReasonModalOpen(true)
+  }
+
+  const handleAction = async () => {
+    if (!pendingAction) return
+    const { userId, action } = pendingAction
+    
+    setReasonModalOpen(false)
     setActionLoading(userId + "-" + action)
     setError("")
 
     try {
+      const csrfToken = await getCsrfToken()
       const res = await fetch("/api/admin/verify-user", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, action }),
+        headers: { 
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken || "",
+        },
+        body: JSON.stringify({ 
+          userId, 
+          action, 
+          reason: moderationReason 
+        }),
       })
 
       if (!res.ok) {
@@ -83,12 +143,14 @@ export default function AdminPage() {
         throw new Error(data.error || "Action failed")
       }
 
-      // Refresh list
-      await fetchUsers()
+      // Refresh both list and moderation logs
+      await Promise.all([fetchUsers(), fetchLogs()])
     } catch (err: any) {
       setError(err.message || "Action failed")
     } finally {
       setActionLoading(null)
+      setPendingAction(null)
+      setModerationReason("")
     }
   }
 
@@ -194,7 +256,7 @@ export default function AdminPage() {
                     <Button
                       size="sm"
                       className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 md:flex-initial"
-                      onClick={() => handleAction(u.id, "APPROVE")}
+                      onClick={() => triggerActionPrompt(u.id, "APPROVE")}
                       disabled={actionLoading !== null}
                     >
                       {actionLoading === `${u.id}-APPROVE` ? (
@@ -209,7 +271,7 @@ export default function AdminPage() {
                       size="sm"
                       variant="outline"
                       className="border-destructive/30 text-destructive hover:bg-destructive/10 flex-1 md:flex-initial bg-background"
-                      onClick={() => handleAction(u.id, "REJECT")}
+                      onClick={() => triggerActionPrompt(u.id, "REJECT")}
                       disabled={actionLoading !== null}
                     >
                       {actionLoading === `${u.id}-REJECT` ? (
@@ -266,8 +328,8 @@ export default function AdminPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-border text-muted-foreground hover:text-destructive flex-1 md:flex-initial bg-background"
-                        onClick={() => handleAction(u.id, "REJECT")}
+                        className="border-border text-muted-foreground hover:text-destructive flex-1 md:flex-initial bg-background animate-pulse"
+                        onClick={() => triggerActionPrompt(u.id, "REJECT")}
                         disabled={actionLoading !== null}
                       >
                         Suspend
@@ -278,7 +340,7 @@ export default function AdminPage() {
                         size="sm"
                         variant="ghost"
                         className="text-muted-foreground hover:text-destructive p-2"
-                        onClick={() => handleAction(u.id, "DELETE")}
+                        onClick={() => triggerActionPrompt(u.id, "DELETE")}
                         disabled={actionLoading !== null}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -306,7 +368,7 @@ export default function AdminPage() {
                 <div key={u.id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div className="space-y-1">
                     <span className="font-semibold text-foreground">{u.studentProfile?.name || "Unknown"}</span>
-                    <div className="text-xs text-muted-foreground font-mono animate-pulse">
+                    <div className="text-xs text-muted-foreground font-mono">
                       Email: {u.email} | Username: @{u.studentProfile?.username}
                     </div>
                   </div>
@@ -315,7 +377,7 @@ export default function AdminPage() {
                       <Button
                         size="sm"
                         className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1 md:flex-initial"
-                        onClick={() => handleAction(u.id, "APPROVE")}
+                        onClick={() => triggerActionPrompt(u.id, "APPROVE")}
                         disabled={actionLoading !== null}
                       >
                         Restore & Approve
@@ -326,7 +388,7 @@ export default function AdminPage() {
                         size="sm"
                         variant="ghost"
                         className="text-muted-foreground hover:text-destructive p-2"
-                        onClick={() => handleAction(u.id, "DELETE")}
+                        onClick={() => triggerActionPrompt(u.id, "DELETE")}
                         disabled={actionLoading !== null}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -339,6 +401,66 @@ export default function AdminPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* MODERATION AUDIT LOGS */}
+      <Card className="border-border bg-card">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-foreground flex items-center gap-2">
+            <History className="h-5 w-5 text-primary" /> 🛡 Moderation Audit Logs
+          </CardTitle>
+          <CardDescription className="text-muted-foreground text-xs font-mono">
+            Immutable tracking of verification actions and suspensions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {logs.length === 0 ? (
+            <p className="text-sm text-muted-foreground font-mono py-4 text-center border border-dashed border-border rounded-lg bg-card">
+              No audit logs recorded yet.
+            </p>
+          ) : (
+            <div className="border border-border rounded-lg overflow-x-auto bg-neutral-900/10">
+              <table className="w-full text-left border-collapse text-sm font-mono">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50 text-muted-foreground text-xs">
+                    <th className="p-3">Timestamp</th>
+                    <th className="p-3">Moderator</th>
+                    <th className="p-3">Target Account</th>
+                    <th className="p-3">Action</th>
+                    <th className="p-3">Reason / Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {logs.map((log) => (
+                    <tr key={log.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="p-3 whitespace-nowrap text-xs text-muted-foreground">
+                        {new Date(log.createdAt).toLocaleString()}
+                      </td>
+                      <td className="p-3 font-semibold text-foreground text-xs">
+                        {log.adminName}
+                      </td>
+                      <td className="p-3 text-xs text-foreground">
+                        {log.targetName}
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          log.action === "APPROVE" ? "bg-emerald-950 text-emerald-400 border border-emerald-500/25" :
+                          log.action === "REJECT" ? "bg-amber-950 text-amber-400 border border-amber-500/25" :
+                          "bg-red-950 text-red-400 border border-red-500/25"
+                        }`}>
+                          {log.action}
+                        </span>
+                      </td>
+                      <td className="p-3 text-xs text-muted-foreground max-w-xs truncate" title={log.reason || ""}>
+                        {log.reason || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ID CARD LIGHTBOX */}
       {selectedIdPhoto && (
@@ -363,6 +485,66 @@ export default function AdminPage() {
               alt="Student ID full verification image" 
               className="max-w-full max-h-[80vh] object-contain rounded"
             />
+          </div>
+        </div>
+      )}
+
+      {/* REASON PROMPT MODAL */}
+      {reasonModalOpen && pendingAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="relative w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl space-y-4 animate-in zoom-in-95">
+            <button
+              onClick={() => {
+                setReasonModalOpen(false)
+                setPendingAction(null)
+              }}
+              className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            
+            <div className="border-b border-border pb-3">
+              <h3 className="text-lg font-semibold font-mono flex items-center gap-1.5 text-primary">
+                🛡 Audit Log Details
+              </h3>
+              <p className="text-xs text-muted-foreground font-mono mt-1">
+                Provide a reason for the action: <strong className="text-foreground">{pendingAction.action}</strong>
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-mono text-muted-foreground">Action Reason</label>
+                <textarea
+                  value={moderationReason}
+                  onChange={(e) => setModerationReason(e.target.value)}
+                  placeholder="e.g. Valid student ID card / Blurry student card..."
+                  className="flex min-h-20 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-xs font-mono placeholder:text-muted-foreground/50 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50"
+                  required
+                />
+              </div>
+              
+              <div className="flex gap-3 justify-end pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="font-mono text-xs"
+                  onClick={() => {
+                    setReasonModalOpen(false)
+                    setPendingAction(null)
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-primary text-primary-foreground hover:bg-primary/95 font-mono text-xs"
+                  onClick={handleAction}
+                >
+                  Confirm Action
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}

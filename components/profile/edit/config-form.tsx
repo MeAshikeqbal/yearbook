@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { getCsrfToken } from "next-auth/react"
 import { Camera, Loader2, User, Tag, FileText, Github, Linkedin } from "lucide-react"
 
 interface ConfigFormProps {
@@ -47,9 +48,13 @@ export function ConfigForm({
     setError("")
 
     try {
+      const csrfToken = await getCsrfToken();
       const urlRes = await fetch("/api/upload-url", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken || "",
+        },
         body: JSON.stringify({
           filename: file.name,
           contentType: file.type,
@@ -75,8 +80,8 @@ export function ConfigForm({
       }
 
       setAvatarUrl(publicUrl)
-    } catch (err: any) {
-      setError(err.message || "Failed to upload avatar.")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to upload avatar.")
     } finally {
       setUploading(false)
     }

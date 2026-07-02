@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { getCsrfToken } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Save, Terminal, Loader2, ArrowLeft, Folder, FileCode, Settings, Code2, Layers, User, Cpu } from "lucide-react"
+import { Save, Terminal, Loader2, ArrowLeft, Folder, FileCode, Code2, Layers, User, Cpu } from "lucide-react"
 
 // Import custom components locally
 import { ConfigForm } from "./config-form"
@@ -190,9 +191,13 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
     statsObj["customJs"] = customJs
 
     try {
+      const csrfToken = await getCsrfToken();
       const res = await fetch("/api/profile/save", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken || "",
+        },
         body: JSON.stringify({
           username: initialData.username,
           name,
@@ -213,8 +218,8 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
 
       router.push(`/profile/${initialData.username}`)
       router.refresh()
-    } catch (err: any) {
-      setError(err.message || "Failed to save profile changes.")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to save profile changes.")
     } finally {
       setSaving(false)
     }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { verifyCsrf } from "@/lib/csrf";
 
 // GET /api/memories - Fetch all memories
 export async function GET() {
@@ -21,6 +22,12 @@ export async function GET() {
 // POST /api/memories - Create a new memory after successful R2 upload
 export async function POST(req: Request) {
   try {
+    // CSRF Protection
+    const isCsrfValid = await verifyCsrf(req);
+    if (!isCsrfValid) {
+      return NextResponse.json({ error: "Invalid CSRF headers" }, { status: 403 });
+    }
+
     const session = await getServerSession(authOptions);
 
     // Verify authorized user

@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { verifyCsrf } from "@/lib/csrf";
 
 export async function POST(req: Request) {
   try {
+    // CSRF Protection
+    const isCsrfValid = await verifyCsrf(req);
+    if (!isCsrfValid) {
+      return NextResponse.json({ error: "Invalid CSRF headers" }, { status: 403 });
+    }
+
     const session = await getServerSession(authOptions);
 
     if (!session) {
