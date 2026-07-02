@@ -12,6 +12,7 @@ interface Student {
   bio: string
   avatarUrl: string
   stats: Record<string, number | string>
+  customCss?: string | null
 }
 
 interface BrowseClientProps {

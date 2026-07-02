@@ -19,6 +19,7 @@ export default async function BrowsePage() {
       bio: true,
       avatarUrl: true,
       stats: true,
+      customCss: true,
     },
     orderBy: {
       name: "asc",
@@ -33,6 +34,7 @@ export default async function BrowsePage() {
     bio: s.bio,
     avatarUrl: s.avatarUrl,
     stats: s.stats as Record<string, number | string>,
+    customCss: s.customCss,
   }))
 
   return <BrowseClient initialStudents={formattedStudents} />

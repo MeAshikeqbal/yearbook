@@ -11,6 +11,7 @@ interface Student {
   bio: string
   avatarUrl: string
   stats: Record<string, number | string>
+  customCss?: string | null
 }
 
 interface StudentCardProps {
@@ -21,23 +22,31 @@ export function StudentCard({ student }: StudentCardProps) {
   const bugsFixed = student.stats?.bugsFixed ?? 0
   const coffeeConsumed = student.stats?.coffeeConsumed ?? 0
 
+  // Scope user's custom CSS to avoid global style pollution
+  const scopedCss = student.customCss
+    ? student.customCss
+        .replaceAll(".profile-card", `.student-card-${student.username}`)
+        .replaceAll(".student-profile-wrapper", `.student-card-${student.username}`)
+    : ""
+
   return (
-    <Link href={`/profile/${student.username}`} className="block w-full">
+    <Link href={`/profile/${student.username}`} className="block w-full group relative">
+      {scopedCss && (
+        <style dangerouslySetInnerHTML={{ __html: scopedCss }} />
+      )}
       <ProfileCard
         name={student.name}
         title={student.role}
         handle={student.username}
         status={`🐛 ${bugsFixed} / ☕ ${coffeeConsumed}`}
-        contactText="Profile"
-        avatarUrl={student.avatarUrl || "https://placehold.co/150"}
+        contactText="View Profile"
+        avatarUrl={student.avatarUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop"}
         showUserInfo={true}
         enableTilt={true}
-        enableMobileTilt={false}
         behindGlowEnabled={true}
-        behindGlowColor="rgba(var(--primary-rgb, 125, 190, 255), 0.35)"
-        behindGlowSize="45%"
-        innerGradient="linear-gradient(145deg, rgba(30,30,46,0.85) 0%, rgba(20,20,30,0.95) 100%)"
-        className="cursor-pointer"
+        behindGlowColor="rgba(124, 58, 237, 0.25)"
+        behindGlowSize="50%"
+        className={`cursor-pointer transition-transform duration-300 student-card-${student.username}`}
       />
     </Link>
   )
