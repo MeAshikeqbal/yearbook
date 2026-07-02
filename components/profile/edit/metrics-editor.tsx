@@ -1,9 +1,8 @@
 "use client"
 
 import React, { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Cpu, Plus, Trash2 } from "lucide-react"
+import { Cpu, Plus, Trash2, Hash, Layers } from "lucide-react"
 
 interface StatItem {
   key: string
@@ -40,74 +39,96 @@ export function MetricsEditor({ stats, setStats, setError }: MetricsEditorProps)
   }
 
   return (
-    <Card className="border-border bg-card">
-      <CardHeader className="border-b border-border/50 py-3 px-6">
-        <CardTitle className="text-sm font-bold font-mono flex items-center gap-2">
-          <Cpu className="h-4 w-4 text-accent" /> diagnostic_metrics
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-6 space-y-4">
-        
-        {/* Active metrics grid list */}
-        <div className="space-y-2">
-          <span className="text-xs font-mono text-muted-foreground block">Active Metrics Grid</span>
-          {stats.length === 0 ? (
-            <p className="text-3xs font-mono text-muted-foreground py-2 text-center border border-dashed border-border rounded-md">
-              No custom metrics compiled. Add some metrics below!
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 gap-2">
-              {stats.map((s) => (
-                <div key={s.key} className="flex justify-between items-center bg-background border border-border p-2 rounded-md font-mono text-xs">
-                  <div className="truncate pr-1">
-                    <span className="text-muted-foreground text-3xs block uppercase tracking-wider">{s.key}</span>
-                    <span className="font-semibold text-foreground">{s.val}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveStat(s.key)}
-                    className="text-muted-foreground hover:text-destructive p-1 transition-colors"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="space-y-6 animate-in fade-in-50 duration-300">
+      <div>
+        <h3 className="text-base font-bold text-foreground font-mono">./diagnostic_metrics</h3>
+        <p className="text-xs text-muted-foreground font-mono mt-0.5">
+          Define custom numeric or text-based stats to track compile-time diagnostics.
+        </p>
+      </div>
 
-        {/* Add new metric elements */}
-        <div className="border-t border-border/50 pt-4 flex gap-2 items-end">
-          <div className="flex-1 space-y-1">
-            <label className="text-3xs font-mono text-muted-foreground">Metric Name</label>
+      {/* Active metrics grid list */}
+      <div className="space-y-2.5">
+        <span className="text-xs font-mono font-semibold text-muted-foreground flex items-center gap-1.5">
+          <Layers className="h-3.5 w-3.5 text-primary" /> Active Metrics Grid
+        </span>
+        
+        {stats.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-8 border border-dashed border-white/5 rounded-xl bg-black/10 text-center font-mono">
+            <Cpu className="h-8 w-8 text-neutral-600 animate-pulse mb-2" />
+            <p className="text-3xs text-muted-foreground max-w-xs leading-relaxed">
+              No custom metrics compiled. Add metrics like `bugsFixed` or `coffeeConsumed` to populate your telemetry cards.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {stats.map((s) => (
+              <div 
+                key={s.key} 
+                className="group relative flex justify-between items-center bg-neutral-900/30 hover:bg-neutral-900/60 border border-white/5 rounded-xl p-3 font-mono text-xs transition-all duration-200"
+              >
+                {/* Glow border on hover */}
+                <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary/40 rounded-l-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="truncate pr-2 pl-1.5">
+                  <span className="text-neutral-500 text-3xs block uppercase tracking-wider font-bold">{s.key}</span>
+                  <span className="font-bold text-foreground text-sm tracking-tight">{s.val}</span>
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={() => handleRemoveStat(s.key)}
+                  className="text-neutral-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-white/5 transition-all duration-200"
+                  title="Remove Metric"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Add new metric elements */}
+      <div className="border-t border-white/5 pt-5 space-y-4">
+        <span className="text-xs font-mono font-bold text-white block">Add Telemetry Node</span>
+        
+        <div className="flex flex-col md:flex-row gap-3 items-end">
+          <div className="flex-1 w-full space-y-1.5">
+            <label className="text-3xs font-mono text-muted-foreground uppercase font-bold flex items-center gap-1">
+              <Hash className="h-3 w-3" /> Metric Key
+            </label>
             <input
               type="text"
-              className="flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs focus-visible:outline-hidden focus-visible:ring-1"
-              placeholder="e.g. coffeeConsumed, bugsFixed"
+              className="flex h-9 w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 px-3 py-1.5 text-xs text-foreground placeholder:text-neutral-600 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all font-mono"
+              placeholder="e.g. linesOfCode"
               value={newStatKey}
               onChange={(e) => setNewStatKey(e.target.value)}
             />
           </div>
-          <div className="flex-1 space-y-1">
-            <label className="text-3xs font-mono text-muted-foreground">Metric Value</label>
+          
+          <div className="flex-1 w-full space-y-1.5">
+            <label className="text-3xs font-mono text-muted-foreground uppercase font-bold flex items-center gap-1">
+              <Cpu className="h-3 w-3" /> Metric Value
+            </label>
             <input
               type="text"
-              className="flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs focus-visible:outline-hidden focus-visible:ring-1"
-              placeholder="e.g. 404, VS Code, C++"
+              className="flex h-9 w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 px-3 py-1.5 text-xs text-foreground placeholder:text-neutral-600 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all font-mono"
+              placeholder="e.g. 10000 or v1.0.0"
               value={newStatVal}
               onChange={(e) => setNewStatVal(e.target.value)}
             />
           </div>
+          
           <Button
             type="button"
-            size="sm"
-            className="h-8 gap-1 font-mono text-3xs bg-primary text-primary-foreground"
+            className="h-9 w-full md:w-auto px-4 gap-1.5 font-mono text-xs bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all shadow-md shrink-0 cursor-pointer"
             onClick={handleAddStat}
           >
-            <Plus className="h-3.5 w-3.5" /> Add
+            <Plus className="h-4 w-4" /> Add Metric
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
