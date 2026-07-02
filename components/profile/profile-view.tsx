@@ -81,6 +81,9 @@ export function ProfileView({ student, isOwner, isApproved }: ProfileViewProps) 
     return (
       <div className="min-h-svh relative student-profile-wrapper bg-background text-foreground">
         
+        {/* Base tag to resolve relative assets (e.g. me.png) to this user's dynamic directory */}
+        <base href={`/profile/${student.username}/`} />
+        
         {/* Custom stylesheet override */}
         {(student.customCss || statsObj.customCss) && (
           <style

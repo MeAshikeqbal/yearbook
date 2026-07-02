@@ -32,7 +32,7 @@ export async function GET(
     const contentType = res.headers.get("content-type") || "image/png"
     const buffer = await res.arrayBuffer()
 
-    return new NextResponse(Buffer.from(buffer), {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=3600, s-maxage=3600",

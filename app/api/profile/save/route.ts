@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrf } from "@/lib/csrf";
+import { revalidatePath } from "next/cache";
 
 export async function POST(req: Request) {
   try {
@@ -63,7 +64,6 @@ export async function POST(req: Request) {
     });
 
     // Force Next.js to purge caches for the profile page and directory
-    const { revalidatePath } = require("next/cache");
     revalidatePath(`/profile/${username.toLowerCase().trim()}`);
     revalidatePath(`/browse`);
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { getCsrfToken } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Save, Terminal, Loader2, ArrowLeft, Folder, FileCode, Code2, Layers, User, Cpu } from "lucide-react"
+import { Save, Terminal, Loader2, ArrowLeft, Folder, FileCode, Code2, Layers, User, Cpu, RefreshCw } from "lucide-react"
 
 // Import custom components locally
 import { ConfigForm } from "./config-form"
@@ -12,8 +12,10 @@ import { MetricsEditor } from "./metrics-editor"
 import { LiveSandbox } from "./live-sandbox"
 import { BlockManager } from "./block-manager"
 import { MatrixTransition } from "./matrix-transition"
+import { CodeEditor } from "./code-editor"
 
 import { AutocompleteTextarea } from "@/components/ui/autocomplete-textarea"
+import { generateProfileTemplate, getAvatarExtension } from "@/lib/profile-template"
 
 const DEFAULT_CSS_TEMPLATE = `/* ==========================================================================
    Default Profile Card & Page Custom CSS Override Template
@@ -89,7 +91,6 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
   const [avatarUrl, setAvatarUrl] = useState<string>(initialData.avatarUrl)
   const [github, setGithub] = useState<string>(initialData.github)
   const [linkedin, setLinkedin] = useState<string>(initialData.linkedin)
-  const [customCss, setCustomCss] = useState<string>(initialData.customCss || DEFAULT_CSS_TEMPLATE)
 
   const initialBlocks = initialData.stats.blocks || [
     {
@@ -108,24 +109,68 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
   ]
   const [blocks, setBlocks] = useState<any[]>(initialBlocks)
 
-  const [advanceMode, setAdvanceMode] = useState<boolean>(initialData.stats.advanceMode || false)
-  const [customHtml, setCustomHtml] = useState<string>(
-    initialData.stats.customHtml || 
-    `<div class="p-8 font-mono text-center max-w-xl mx-auto border border-white/10 bg-black/40 rounded-xl mt-12 shadow-2xl">
-  <h1 class="text-3xl font-bold text-sky-400 mb-2">Welcome to my profile</h1>
-  <p class="text-gray-400 text-sm">This is my custom-built portfolio page.</p>
-</div>`
-  )
-  const [customJs, setCustomJs] = useState<string>(
-    initialData.stats.customJs || 
-    `console.log("Welcome to my custom yearbook page!");`
-  )
-  const [activeFile, setActiveFile] = useState<"html" | "css" | "js">("html")
-
   const initialStats = Object.entries(initialData.stats)
-    .filter(([k]) => k !== "blocks" && k !== "advanceMode" && k !== "customHtml" && k !== "customJs")
+    .filter(([k]) => k !== "blocks" && k !== "advanceMode" && k !== "customHtml" && k !== "customJs" && k !== "customCss" && k !== "indexHtml" && k !== "cardHtml" && k !== "bentoHtml")
     .map(([k, v]) => ({ key: k, val: v as string | number }))
   const [stats, setStats] = useState<StatItem[]>(initialStats)
+
+  // Generate default template on-demand if custom advanced profile data doesn't exist
+  const defaultTemplate = React.useMemo(() => {
+    return generateProfileTemplate({
+      username: initialData.username,
+      name: initialData.name,
+      role: initialData.role,
+      bio: initialData.bio,
+      avatarUrl: initialData.avatarUrl,
+      github: initialData.github,
+      linkedin: initialData.linkedin,
+      stats: initialStats,
+      blocks: initialBlocks,
+    });
+  }, [initialData, initialStats, initialBlocks]);
+
+  const [advanceMode, setAdvanceMode] = useState<boolean>(initialData.stats.advanceMode || false)
+  
+  const [indexHtml, setIndexHtml] = useState<string>(
+    initialData.stats.indexHtml || defaultTemplate.indexHtml
+  )
+  const [cardHtml, setCardHtml] = useState<string>(
+    initialData.stats.cardHtml || defaultTemplate.cardHtml
+  )
+  const [bentoHtml, setBentoHtml] = useState<string>(
+    initialData.stats.bentoHtml || defaultTemplate.bentoHtml
+  )
+
+  const [customHtml, setCustomHtml] = useState<string>(
+    initialData.stats.customHtml || defaultTemplate.html
+  )
+  const [customCss, setCustomCss] = useState<string>(
+    initialData.customCss || initialData.stats.customCss || defaultTemplate.css
+  )
+  const [customJs, setCustomJs] = useState<string>(
+    initialData.stats.customJs || defaultTemplate.js
+  )
+  const [activeFile, setActiveFile] = useState<"html" | "card" | "bento" | "css" | "js" | "image">("html")
+
+  const avatarExt = React.useMemo(() => {
+    return getAvatarExtension(avatarUrl)
+  }, [avatarUrl])
+
+  const previewHtml = React.useMemo(() => {
+    if (!customHtml) return ""
+    return customHtml.replace(
+      new RegExp(`src=(['"])(\\./)?me\\.${avatarExt}\\1`, "g"),
+      `src=$1${avatarUrl}$1`
+    )
+  }, [customHtml, avatarExt, avatarUrl])
+
+  // Synchronize component edits with main customHtml
+  useEffect(() => {
+    const combined = indexHtml
+      .replace("<!-- PROFILE_CARD_COMPONENT -->", cardHtml)
+      .replace("<!-- BENTO_GRID_COMPONENT -->", bentoHtml)
+    setCustomHtml(combined)
+  }, [indexHtml, cardHtml, bentoHtml])
 
   // Redesigned local state
   const [activeTab, setActiveTab] = useState<TabType>("identity")
@@ -133,12 +178,60 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
 
   const handleToggleAdvanceMode = () => {
     if (!advanceMode) {
+      // If turning ON advanced mode, and customHtml matches the default welcome template
+      // or is missing, compile it from their current standard inputs!
+      const isDefaultWelcome = !initialData.stats.customHtml || customHtml.includes("Welcome to my profile");
+      if (isDefaultWelcome) {
+        const compiled = generateProfileTemplate({
+          username: initialData.username,
+          name,
+          role,
+          bio,
+          avatarUrl,
+          github,
+          linkedin,
+          stats,
+          blocks,
+        });
+        setIndexHtml(compiled.indexHtml)
+        setCardHtml(compiled.cardHtml)
+        setBentoHtml(compiled.bentoHtml)
+        setCustomHtml(compiled.html)
+        setCustomCss(compiled.css)
+        setCustomJs(compiled.js)
+      }
       setShowMatrixTransition(true)
       setAdvanceMode(true)
     } else {
       setAdvanceMode(false)
     }
   }
+
+  const handleSyncFromStandard = () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to sync from your standard profile config? This will overwrite your current index.html, components/profile-card.html, components/bento-grid.html, style.css, and script.js in the Advanced IDE."
+    );
+    if (!confirmed) return;
+
+    const compiled = generateProfileTemplate({
+      username: initialData.username,
+      name,
+      role,
+      bio,
+      avatarUrl,
+      github,
+      linkedin,
+      stats,
+      blocks,
+    });
+
+    setIndexHtml(compiled.indexHtml)
+    setCardHtml(compiled.cardHtml)
+    setBentoHtml(compiled.bentoHtml)
+    setCustomHtml(compiled.html)
+    setCustomCss(compiled.css)
+    setCustomJs(compiled.js)
+  };
 
   // Script evaluator side effect inside the editor-client for Advanced Mode JS execution
   useEffect(() => {
@@ -187,6 +280,9 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
     })
     statsObj["blocks"] = blocks
     statsObj["advanceMode"] = advanceMode
+    statsObj["indexHtml"] = indexHtml
+    statsObj["cardHtml"] = cardHtml
+    statsObj["bentoHtml"] = bentoHtml
     statsObj["customHtml"] = customHtml
     statsObj["customJs"] = customJs
 
@@ -281,6 +377,15 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
               <span className="text-gray-700">|</span>
               <Button
                 type="button"
+                onClick={handleSyncFromStandard}
+                className="bg-neutral-800 hover:bg-neutral-700 text-gray-300 border border-white/5 font-mono text-[10px] h-8 px-3 flex items-center gap-1.5 cursor-pointer"
+                disabled={saving || uploading}
+              >
+                <RefreshCw className="h-3 w-3" /> Sync Standard
+              </Button>
+              <span className="text-gray-700">|</span>
+              <Button
+                type="button"
                 onClick={() => handleSave()}
                 className="bg-purple-600 hover:bg-purple-700 text-white font-mono text-xs h-8 px-4"
                 disabled={saving || uploading}
@@ -312,12 +417,12 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
             {/* Left Panel: VS Code IDE Editor (50% Width) */}
             <div className="w-1/2 flex flex-col border-r border-[#1e1e1e] bg-[#181818] overflow-hidden min-w-0">
               {/* Tabs Header */}
-              <div className="bg-[#2d2d2d] flex items-center justify-between border-b border-[#1e1e1e] h-9">
+              <div className="bg-[#2d2d2d] flex items-center justify-between border-b border-[#1e1e1e] h-9 select-none">
                 <div className="flex overflow-x-auto scrollbar-none">
                   <button
                     type="button"
                     onClick={() => setActiveFile("html")}
-                    className={`flex items-center gap-1.5 px-4 h-9 text-xs border-r border-[#1e1e1e] transition-colors ${
+                    className={`flex items-center gap-1.5 px-4 h-9 text-xs border-r border-[#1e1e1e] transition-colors cursor-pointer ${
                       activeFile === "html"
                         ? "bg-[#1e1e1e] text-white border-t-2 border-purple-500 font-semibold"
                         : "bg-[#2d2d2d] text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"
@@ -328,8 +433,32 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
                   </button>
                   <button
                     type="button"
+                    onClick={() => setActiveFile("card")}
+                    className={`flex items-center gap-1.5 px-4 h-9 text-xs border-r border-[#1e1e1e] transition-colors cursor-pointer ${
+                      activeFile === "card"
+                        ? "bg-[#1e1e1e] text-white border-t-2 border-purple-500 font-semibold"
+                        : "bg-[#2d2d2d] text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"
+                    }`}
+                  >
+                    <Code2 className="h-3.5 w-3.5 text-orange-400" />
+                    profile-card.html
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveFile("bento")}
+                    className={`flex items-center gap-1.5 px-4 h-9 text-xs border-r border-[#1e1e1e] transition-colors cursor-pointer ${
+                      activeFile === "bento"
+                        ? "bg-[#1e1e1e] text-white border-t-2 border-purple-500 font-semibold"
+                        : "bg-[#2d2d2d] text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"
+                    }`}
+                  >
+                    <Code2 className="h-3.5 w-3.5 text-orange-400" />
+                    bento-grid.html
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setActiveFile("css")}
-                    className={`flex items-center gap-1.5 px-4 h-9 text-xs border-r border-[#1e1e1e] transition-colors ${
+                    className={`flex items-center gap-1.5 px-4 h-9 text-xs border-r border-[#1e1e1e] transition-colors cursor-pointer ${
                       activeFile === "css"
                         ? "bg-[#1e1e1e] text-white border-t-2 border-purple-500 font-semibold"
                         : "bg-[#2d2d2d] text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"
@@ -341,7 +470,7 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
                   <button
                     type="button"
                     onClick={() => setActiveFile("js")}
-                    className={`flex items-center gap-1.5 px-4 h-9 text-xs border-r border-[#1e1e1e] transition-colors ${
+                    className={`flex items-center gap-1.5 px-4 h-9 text-xs border-r border-[#1e1e1e] transition-colors cursor-pointer ${
                       activeFile === "js"
                         ? "bg-[#1e1e1e] text-white border-t-2 border-purple-500 font-semibold"
                         : "bg-[#2d2d2d] text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"
@@ -350,6 +479,18 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
                     <FileCode className="h-3.5 w-3.5 text-yellow-400" />
                     script.js
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveFile("image")}
+                    className={`flex items-center gap-1.5 px-4 h-9 text-xs border-r border-[#1e1e1e] transition-colors cursor-pointer ${
+                      activeFile === "image"
+                        ? "bg-[#1e1e1e] text-white border-t-2 border-purple-500 font-semibold"
+                        : "bg-[#2d2d2d] text-gray-400 hover:bg-[#2a2a2a] hover:text-gray-200"
+                    }`}
+                  >
+                    <FileCode className="h-3.5 w-3.5 text-emerald-400" />
+                    me.{avatarExt}
+                  </button>
                 </div>
               </div>
 
@@ -357,39 +498,94 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
               <div className="flex-1 flex overflow-hidden min-h-0">
                 
                 {/* Explorer Sidebar */}
-                <div className="w-44 bg-[#252526] border-r border-[#1e1e1e] hidden sm:flex flex-col text-[11px] p-2">
+                <div className="w-48 bg-[#252526] border-r border-[#1e1e1e] hidden sm:flex flex-col text-[11px] p-2 select-none">
                   <span className="font-bold text-gray-500 uppercase tracking-wider text-[9px] block mb-2 px-2">
                     Explorer
                   </span>
                   <div className="space-y-0.5">
+                    {/* Root Folder */}
                     <div className="flex items-center gap-1 text-gray-400 font-bold px-2 py-0.5">
                       <Folder className="h-3.5 w-3.5 text-purple-400 fill-purple-400/20" />
-                      <span>profile-layout</span>
+                      <span>profile</span>
                     </div>
+
+                    {/* index.html */}
                     <button
                       type="button"
                       onClick={() => setActiveFile("html")}
-                      className={`flex items-center gap-1.5 w-full text-left pl-6 pr-2 py-1 rounded-sm ${
+                      className={`flex items-center gap-1.5 w-full text-left pl-6 pr-2 py-1 rounded-sm cursor-pointer ${
                         activeFile === "html" ? "bg-[#37373d] text-white font-medium" : "text-gray-400 hover:bg-[#2a2d2e]"
                       }`}
                     >
                       <Code2 className="h-3.5 w-3.5 text-orange-400" />
                       <span>index.html</span>
                     </button>
+
+                    {/* Components Folder */}
+                    <div className="flex items-center gap-1 text-gray-400 font-semibold pl-4 pr-2 py-0.5">
+                      <Folder className="h-3 w-3 text-blue-400 fill-blue-400/10" />
+                      <span>components</span>
+                    </div>
+
+                    {/* profile-card.html */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveFile("card")}
+                      className={`flex items-center gap-1.5 w-full text-left pl-8 pr-2 py-1 rounded-sm cursor-pointer ${
+                        activeFile === "card" ? "bg-[#37373d] text-white font-medium" : "text-gray-400 hover:bg-[#2a2d2e]"
+                      }`}
+                    >
+                      <Code2 className="h-3.5 w-3.5 text-orange-400" />
+                      <span>profile-card.html</span>
+                    </button>
+
+                    {/* bento-grid.html */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveFile("bento")}
+                      className={`flex items-center gap-1.5 w-full text-left pl-8 pr-2 py-1 rounded-sm cursor-pointer ${
+                        activeFile === "bento" ? "bg-[#37373d] text-white font-medium" : "text-gray-400 hover:bg-[#2a2d2e]"
+                      }`}
+                    >
+                      <Code2 className="h-3.5 w-3.5 text-orange-400" />
+                      <span>bento-grid.html</span>
+                    </button>
+
+                    {/* assets Folder */}
+                    <div className="flex items-center gap-1 text-gray-400 font-semibold pl-4 pr-2 py-0.5">
+                      <Folder className="h-3 w-3 text-emerald-400 fill-emerald-400/10" />
+                      <span>assets</span>
+                    </div>
+
+                    {/* me.png */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveFile("image")}
+                      className={`flex items-center gap-1.5 w-full text-left pl-8 pr-2 py-1 rounded-sm cursor-pointer ${
+                        activeFile === "image" ? "bg-[#37373d] text-white font-medium" : "text-gray-400 hover:bg-[#2a2d2e]"
+                      }`}
+                    >
+                      <FileCode className="h-3.5 w-3.5 text-emerald-400" />
+                      <span>me.{avatarExt}</span>
+                    </button>
+
+                    {/* style.css */}
                     <button
                       type="button"
                       onClick={() => setActiveFile("css")}
-                      className={`flex items-center gap-1.5 w-full text-left pl-6 pr-2 py-1 rounded-sm ${
+                      className={`flex items-center gap-1.5 w-full text-left pl-6 pr-2 py-1 rounded-sm cursor-pointer ${
                         activeFile === "css" ? "bg-[#37373d] text-white font-medium" : "text-gray-400 hover:bg-[#2a2d2e]"
                       }`}
                     >
                       <Terminal className="h-3.5 w-3.5 text-blue-400" />
                       <span>style.css</span>
                     </button>
+
+                    {/* script.js */}
                     <button
                       type="button"
                       onClick={() => setActiveFile("js")}
-                      className={`flex items-center gap-1.5 w-full text-left pl-6 pr-2 py-1 rounded-sm ${
+                      className={`flex items-center gap-1.5 w-full text-left pl-6 pr-2 py-1 rounded-sm cursor-pointer ${
                         activeFile === "js" ? "bg-[#37373d] text-white font-medium" : "text-gray-400 hover:bg-[#2a2d2e]"
                       }`}
                     >
@@ -400,41 +596,111 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
                 </div>
 
                 {/* Editor Code Textarea */}
-                <div className="flex-1 flex flex-col bg-[#1e1e1e] relative min-w-0">
-                  <div className="h-6 bg-[#1e1e1e] border-b border-[#2d2d2d] flex items-center px-4 text-[10px] text-gray-500 gap-1">
-                    <span>profile-layout</span>
+                <div className="flex-1 flex flex-col bg-[#1e1e1e] relative min-w-0 border-l border-[#2d2d2d]">
+                  <div className="h-6 bg-[#1e1e1e] border-b border-[#2d2d2d] flex items-center px-4 text-[10px] text-gray-500 gap-1 select-none">
+                    <span>profile</span>
                     <span>&gt;</span>
+                    {activeFile === "card" || activeFile === "bento" ? (
+                      <>
+                        <span>components</span>
+                        <span>&gt;</span>
+                      </>
+                    ) : activeFile === "image" ? (
+                      <>
+                        <span>assets</span>
+                        <span>&gt;</span>
+                      </>
+                    ) : null}
                     <span className="text-gray-400">
-                      {activeFile === "html" ? "index.html" : activeFile === "css" ? "style.css" : "script.js"}
+                      {activeFile === "html"
+                        ? "index.html"
+                        : activeFile === "card"
+                        ? "profile-card.html"
+                        : activeFile === "bento"
+                        ? "bento-grid.html"
+                        : activeFile === "css"
+                        ? "style.css"
+                        : activeFile === "js"
+                        ? "script.js"
+                        : `me.${avatarExt}`}
                     </span>
                   </div>
 
-                  <div className="flex-1 flex overflow-y-auto min-h-0 font-mono text-[11px] leading-[20px] pb-4">
-                    {/* Line Gutter */}
-                    <div className="select-none text-right pr-3 text-gray-600 border-r border-[#2d2d2d] text-[10px] font-mono leading-[20px] pt-1 pl-3 w-10 bg-[#1e1e1e]">
-                      {(activeFile === "html" ? customHtml : activeFile === "css" ? customCss : customJs)
-                        .split("\n")
-                        .map((_, i) => (
-                          <div key={i} className="h-5">{i + 1}</div>
-                        ))}
-                    </div>
-
-                    {/* Code Area */}
-                    {activeFile === "css" ? (
-                      <AutocompleteTextarea
-                        className="flex-1 bg-transparent text-gray-200 resize-none outline-none border-none font-mono leading-[20px] pt-1 px-4 text-[11px] focus:ring-0 overflow-x-auto select-text selection:bg-purple-500/30 w-full h-full"
-                        value={customCss}
-                        onChange={setCustomCss}
-                      />
+                  <div className="flex-1 min-h-0 relative">
+                    {activeFile === "image" ? (
+                      /* Premium Chess-board Image Preview Panel */
+                      <div className="absolute inset-0 bg-[#121212] p-8 overflow-auto flex flex-col items-center justify-center select-none">
+                        <div
+                          className="relative border border-white/10 rounded-lg p-2 max-w-xs shadow-2xl"
+                          style={{
+                            backgroundImage: `
+                              linear-gradient(45deg, #181818 25%, transparent 25%), 
+                              linear-gradient(-45deg, #181818 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #181818 75%), 
+                              linear-gradient(-45deg, transparent 75%, #181818 75%)
+                            `,
+                            backgroundSize: '16px 16px',
+                            backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
+                            backgroundColor: '#242424'
+                          }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={avatarUrl}
+                            alt="Profile Avatar Preview"
+                            className="max-h-60 max-w-60 object-contain rounded-md"
+                          />
+                        </div>
+                        
+                        <div className="mt-6 bg-[#1a1a1a] border border-white/5 p-4 rounded-lg w-full max-w-sm text-left space-y-2 font-mono text-[10px] text-gray-400">
+                          <div className="flex justify-between border-b border-white/5 pb-1">
+                            <span className="text-neutral-500">File Name:</span>
+                            <span className="text-emerald-400">me.${avatarExt}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/5 pb-1">
+                            <span className="text-neutral-500">Relative Path:</span>
+                            <span className="text-neutral-300">./assets/me.${avatarExt}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/5 pb-1">
+                            <span className="text-neutral-500">Mime Type:</span>
+                            <span className="text-neutral-300">image/${avatarExt}</span>
+                          </div>
+                          <div className="flex justify-between border-b border-white/5 pb-1">
+                            <span className="text-neutral-500">Serving Endpoint:</span>
+                            <span className="text-purple-400 truncate">/profile/${initialData.username}/me.${avatarExt}</span>
+                          </div>
+                          <div className="pt-2 text-[9px] text-neutral-500 italic text-center">
+                            * Asset is automatically mapped to your uploaded profile avatar.
+                          </div>
+                        </div>
+                      </div>
                     ) : (
-                      <textarea
-                        className="flex-1 bg-transparent text-gray-200 resize-none outline-none border-none font-mono leading-[20px] pt-1 px-4 text-[11px] focus:ring-0 overflow-x-auto select-text selection:bg-purple-500/30"
-                        value={activeFile === "html" ? customHtml : customJs}
-                        onChange={(e) => {
-                          if (activeFile === "html") setCustomHtml(e.target.value)
-                          else setCustomJs(e.target.value)
+                      <CodeEditor
+                        value={
+                          activeFile === "html"
+                            ? indexHtml
+                            : activeFile === "card"
+                            ? cardHtml
+                            : activeFile === "bento"
+                            ? bentoHtml
+                            : activeFile === "css"
+                            ? customCss
+                            : customJs
+                        }
+                        onChange={(val) => {
+                          if (activeFile === "html") setIndexHtml(val);
+                          else if (activeFile === "card") setCardHtml(val);
+                          else if (activeFile === "bento") setBentoHtml(val);
+                          else if (activeFile === "css") setCustomCss(val);
+                          else setCustomJs(val);
                         }}
-                        spellCheck={false}
+                        language={
+                          activeFile === "css"
+                            ? "css"
+                            : activeFile === "js"
+                            ? "js"
+                            : "html"
+                        }
                       />
                     )}
                   </div>
@@ -443,7 +709,7 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
               </div>
 
               {/* Status Bar */}
-              <div className="h-5 bg-purple-700 text-white flex items-center justify-between px-3 text-[10px]">
+              <div className="h-5 bg-purple-700 text-white flex items-center justify-between px-3 text-[10px] select-none">
                 <div className="flex items-center gap-2">
                   <span className="bg-purple-800 px-1.5 py-0.5 rounded-xs font-mono font-bold text-[8px]">IDE WORKSPACE</span>
                   <span>File Edited</span>
@@ -451,7 +717,7 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
                 <div>
                   <span>LF</span>
                   <span className="ml-2">UTF-8</span>
-                  <span className="ml-2">{activeFile.toUpperCase()}</span>
+                  <span className="ml-2">{activeFile === "card" ? "CARD.HTML" : activeFile === "bento" ? "BENTO.HTML" : activeFile.toUpperCase()}</span>
                 </div>
               </div>
             </div>
@@ -477,7 +743,7 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
 
               {/* Mock Viewport Browser Body */}
               <div className="flex-1 overflow-auto bg-[#1a1a1a] p-8 advanced-preview-viewport">
-                <div dangerouslySetInnerHTML={{ __html: customHtml || "<p class='font-mono text-xs text-muted-foreground'>Compile index.html to view output.</p>" }} />
+                <div dangerouslySetInnerHTML={{ __html: previewHtml || "<p class='font-mono text-xs text-muted-foreground'>Compile index.html to view output.</p>" }} />
               </div>
 
             </div>
