@@ -11,7 +11,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import * as bcrypt from "bcryptjs";
 
 // Connection string with database fallback
-const connectionString = process.env.DATABASE_URL || "process.env.DATABASE_URL!";
+const connectionString = process.env.DATABASE_URL!;
 
 const cleanConnectionString = connectionString
   .replace("&sslrootcert=system", "")
