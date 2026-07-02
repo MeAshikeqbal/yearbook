@@ -49,7 +49,7 @@ export async function POST(req: Request) {
             username: username.toLowerCase().trim(),
             name,
             role: role || "CSE Student",
-            bio: "Hi! I am graduating CSE in 2026. Pending admin approval.",
+            bio: `Hi! I am ${name} graduating ${role} in 2026.`,
             avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`, // Default dynamic robotic avatar
             stats: {
               bugsFixed: 0,

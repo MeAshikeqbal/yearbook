@@ -5,10 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    console.log("[SAVE_PROFILE_API] Incoming save request...");
     const session = await getServerSession(authOptions);
-
-    console.log("[SAVE_PROFILE_API] Active Session User:", session?.user);
 
     if (!session) {
       console.error("[SAVE_PROFILE_API] Error: Unauthorized (no session found)");
@@ -16,12 +13,6 @@ export async function POST(req: Request) {
     }
 
     const payload = await req.json();
-    console.log("[SAVE_PROFILE_API] Request Payload:", {
-      ...payload,
-      bio: payload.bio ? `${payload.bio.substring(0, 30)}...` : undefined,
-      customCss: payload.customCss ? `${payload.customCss.substring(0, 30)}...` : undefined,
-    });
-
     const { username, name, role, bio, avatarUrl, github, linkedin, customCss, stats } = payload;
 
     if (!username || !name || !role || !bio) {
@@ -44,16 +35,13 @@ export async function POST(req: Request) {
     const isStaff = session.user.role === "ADMIN" || session.user.role === "MODERATOR";
     const isApproved = session.user.status === "APPROVED";
 
-    console.log("[SAVE_PROFILE_API] Permission Check:", { isOwner, isStaff, isApproved, studentUserId: student.userId, sessionUserId: session.user.id });
-
     if (!isStaff && (!isOwner || !isApproved)) {
       console.error("[SAVE_PROFILE_API] Error: Forbidden (user is neither staff nor approved owner)");
       return NextResponse.json({ error: "Forbidden. Account must be approved to edit details." }, { status: 403 });
     }
 
     // Update profile in database
-    console.log("[SAVE_PROFILE_API] Updating Student record with avatarUrl:", avatarUrl);
-    const updatedStudent = await prisma.student.update({
+    await prisma.student.update({
       where: { username: username.toLowerCase().trim() },
       data: {
         name,
@@ -66,13 +54,11 @@ export async function POST(req: Request) {
         stats: stats || {},
       },
     });
-    console.log("[SAVE_PROFILE_API] Update successful! Current avatarUrl in DB:", updatedStudent.avatarUrl);
 
     // Force Next.js to purge caches for the profile page and directory
     const { revalidatePath } = require("next/cache");
     revalidatePath(`/profile/${username.toLowerCase().trim()}`);
     revalidatePath(`/browse`);
-    console.log("[SAVE_PROFILE_API] Cache revalidation successfully triggered.");
 
     return NextResponse.json({ success: true, message: "Profile updated successfully" });
 
