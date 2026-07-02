@@ -31,10 +31,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   const isOwner = session?.user.id === student.userId
-  const isAdmin = session?.user.role === "ADMIN"
+  const isStaff = session?.user.role === "ADMIN" || session?.user.role === "MODERATOR"
   const isApproved = student.user.status === "APPROVED"
 
-  if (!isApproved && !isOwner && !isAdmin) {
+  if (!isApproved && !isOwner && !isStaff) {
     notFound()
   }
 

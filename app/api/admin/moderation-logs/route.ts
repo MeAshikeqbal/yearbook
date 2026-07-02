@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -12,20 +12,18 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Fetch users with their student profiles
-    const users = await prisma.user.findMany({
-      include: {
-        studentProfile: true,
-      },
+    // Fetch the latest 50 moderation logs
+    const logs = await prisma.moderationLog.findMany({
       orderBy: {
         createdAt: "desc",
       },
+      take: 50,
     });
 
-    return NextResponse.json({ users });
+    return NextResponse.json({ logs });
 
   } catch (err) {
-    console.error("Admin fetch users error:", err);
+    console.error("Fetch moderation logs error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

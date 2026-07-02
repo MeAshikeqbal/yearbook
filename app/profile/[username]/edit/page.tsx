@@ -36,16 +36,16 @@ export default async function EditProfilePage({ params }: EditProfilePageProps) 
     notFound()
   }
 
-  // Check profile ownership or ADMIN status
+  // Check profile ownership or ADMIN/MODERATOR status
   const isOwner = session.user.id === student.userId
-  const isAdmin = session.user.role === "ADMIN"
+  const isStaff = session.user.role === "ADMIN" || session.user.role === "MODERATOR"
 
-  if (!isOwner && !isAdmin) {
+  if (!isOwner && !isStaff) {
     redirect("/")
   }
 
   // Restrict editing if pending approval
-  if (student.user.status !== "APPROVED" && !isAdmin) {
+  if (student.user.status !== "APPROVED" && !isStaff) {
     redirect(`/profile/${student.username}`)
   }
 

@@ -1,78 +1,98 @@
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import { cache } from "react";
 
-let prisma: PrismaClient;
+/**
+ * Returns a request-scoped PrismaClient.
+ *
+ * On Cloudflare Workers, global singleton connections cause I/O-out-of-bounds
+ * errors because each Worker isolate is stateless. We use React.cache() to
+ * create exactly one client per incoming request and reuse it across all
+ * server components and route handlers within that same request.
+ *
+ * In production (Cloudflare Workers):
+ *   - Reads the HYPERDRIVE binding via getCloudflareContext() for pooled,
+ *     low-latency Postgres connections.
+ *
+ * In development (Node.js):
+ *   - Falls back to process.env.DATABASE_URL from .env.local / .dev.vars.
+ */
+export const getPrismaClient = cache(async (): Promise<PrismaClient> => {
+  let connectionString: string | undefined;
 
-// Helper to extract connection string from Cloudflare Hyperdrive binding or process.env
-function getConnectionString(): string {
-  // 1. Try process.env.DATABASE_URL (Local Development)
-  let connectionString = process.env.DATABASE_URL;
-
-  // 2. Try process.env.HYPERDRIVE (Cloudflare Pages/Workers environment variable)
-  if (process.env.HYPERDRIVE) {
+  // ── Production: Cloudflare Workers + Hyperdrive ────────────────────────────
+  if (process.env.NODE_ENV === "production") {
     try {
-      const hd = typeof process.env.HYPERDRIVE === 'string'
-        ? JSON.parse(process.env.HYPERDRIVE)
-        : process.env.HYPERDRIVE;
-      if (hd?.connectionString) {
-        connectionString = hd.connectionString;
+      const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+      const { env } = await getCloudflareContext({ async: true });
+      const hyperdrive = (env as Record<string, { connectionString: string } | undefined>).HYPERDRIVE;
+      if (hyperdrive?.connectionString) {
+        connectionString = hyperdrive.connectionString;
       }
-    } catch (_) {}
+    } catch {
+      // getCloudflareContext throws outside of a Workers request — fine for
+      // build-time static generation; fall through to DATABASE_URL below.
+    }
   }
 
-  // 3. Try Next-on-Pages request context (Cloudflare runtime binding)
-  try {
-    // Bypasses Next.js static bundler analysis for cloud-only modules
-    const runRequire = eval("require");
-    const { getRequestContext } = runRequire("@cloudflare/next-on-pages");
-    const ctx = getRequestContext();
-    if (ctx?.env?.HYPERDRIVE?.connectionString) {
-      connectionString = ctx.env.HYPERDRIVE.connectionString;
-    }
-  } catch (_) {}
+  // ── Fallback: local .env.local / .dev.vars ────────────────────────────────
+  if (!connectionString) {
+    connectionString = process.env.DATABASE_URL;
+  }
 
   if (!connectionString) {
-    throw new Error("No database connection string found. Please set DATABASE_URL or configure HYPERDRIVE.");
+    throw new Error(
+      "No database connection string found. " +
+        "Set DATABASE_URL in .env.local (dev) or configure a HYPERDRIVE binding (production)."
+    );
   }
 
-  return connectionString;
-}
-
-if (process.env.NODE_ENV === "production") {
-  const connectionString = getConnectionString();
+  // Strip problematic SSL params that confuse the `pg` driver on Workers
   const cleanConnectionString = connectionString
     .replace("&sslrootcert=system", "")
     .replace("?sslrootcert=system", "");
-  
+
+  const sslRequired =
+    connectionString.includes("sslmode=") || connectionString.includes("sslrootcert=");
+
   const pool = new Pool({
     connectionString: cleanConnectionString,
-    ssl: connectionString.includes("sslmode=") || connectionString.includes("sslrootcert=")
-      ? { rejectUnauthorized: false }
-      : undefined
+    ssl: sslRequired ? { rejectUnauthorized: false } : undefined,
   });
+
   const adapter = new PrismaPg(pool);
-  prisma = new PrismaClient({ adapter });
-} else {
-  // In development, use a global variable to prevent hot-reloading from exhausting connections
-  const globalForPrisma = global as unknown as { prisma: PrismaClient };
-  if (!globalForPrisma.prisma) {
-    const connectionString = getConnectionString();
-    const cleanConnectionString = connectionString
-      .replace("&sslrootcert=system", "")
-      .replace("?sslrootcert=system", "");
+  return new PrismaClient({ adapter });
+});
 
-    const pool = new Pool({
-      connectionString: cleanConnectionString,
-      ssl: connectionString.includes("sslmode=") || connectionString.includes("sslrootcert=")
-        ? { rejectUnauthorized: false }
-        : undefined
-    });
-    const adapter = new PrismaPg(pool);
-    globalForPrisma.prisma = new PrismaClient({ adapter });
-  }
-  prisma = globalForPrisma.prisma;
-}
+/**
+ * Legacy named export kept for backwards compatibility.
+ * All files that previously did `import { prisma } from "@/lib/prisma"` and
+ * then called `await prisma.someModel.someOp()` continue to work unchanged
+ * because `prisma` is now a Proxy that lazily resolves the client on first use.
+ *
+ * HOW TO MIGRATE call-sites (preferred for new code):
+ *   const prisma = await getPrismaClient();
+ *
+ * The Proxy below provides a zero-change compatibility shim for existing code.
+ */
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    // Return a function that, when called, awaits the client and delegates.
+    // This makes `prisma.user.findMany(...)` work as-is in async contexts.
+    return new Proxy(
+      {},
+      {
+        get(_t, method) {
+          return async (...args: unknown[]) => {
+            const client = await getPrismaClient();
+            const model = (client as unknown as Record<string, Record<string, (...a: unknown[]) => unknown>>)[prop as string];
+            return model[method as string](...args);
+          };
+        },
+      }
+    );
+  },
+});
 
-export { prisma };
 export default prisma;

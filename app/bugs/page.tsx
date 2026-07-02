@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, getCsrfToken } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bug, Plus, X, Loader2, User, HelpCircle, MessageSquare } from "lucide-react"
@@ -61,9 +61,13 @@ export default function BugsPage() {
     setError("")
 
     try {
+      const csrfToken = await getCsrfToken();
       const res = await fetch("/api/bugs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken || "",
+        },
         body: JSON.stringify({
           title: `[BUG-${Math.floor(Math.random() * 900) + 100}] ${title.trim().toLowerCase().replace(/\s+/g, "-")}`,
           description,

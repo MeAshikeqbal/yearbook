@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { verifyCsrf } from "@/lib/csrf";
 
 // GET /api/bugs - Fetch all bugs
 export async function GET() {
@@ -19,6 +22,17 @@ export async function GET() {
 // POST /api/bugs - Log a new bug
 export async function POST(req: Request) {
   try {
+    // CSRF Protection
+    const isCsrfValid = await verifyCsrf(req);
+    if (!isCsrfValid) {
+      return NextResponse.json({ error: "Invalid CSRF headers" }, { status: 403 });
+    }
+
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized. Please sign in to submit issues." }, { status: 401 });
+    }
+
     const { title, description, status, reporter } = await req.json();
 
     if (!title || !description || !reporter) {

@@ -1,9 +1,12 @@
 "use client"
 
 import React, { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Layers, Plus, Trash2, ArrowUp, ArrowDown, ChevronDown, ChevronUp } from "lucide-react"
+import { 
+  Layers, Plus, Trash2, ArrowUp, ArrowDown, 
+  ChevronDown, ChevronUp, Edit3, Settings, 
+  Eye, Code2, Tag, Calendar, Terminal, Cpu, Link
+} from "lucide-react"
 
 interface BlockManagerProps {
   blocks: any[]
@@ -82,186 +85,227 @@ export function BlockManager({ blocks, setBlocks }: BlockManagerProps) {
     )
   }
 
+  const getBlockIcon = (type: string) => {
+    switch (type) {
+      case "markdown": return <Terminal className="h-3.5 w-3.5 text-emerald-400" />
+      case "skills": return <Cpu className="h-3.5 w-3.5 text-sky-400" />
+      case "projects": return <Layers className="h-3.5 w-3.5 text-violet-400" />
+      case "timeline": return <Calendar className="h-3.5 w-3.5 text-amber-400" />
+      case "code": return <Code2 className="h-3.5 w-3.5 text-pink-400" />
+      case "metrics": return <Settings className="h-3.5 w-3.5 text-blue-400" />
+      default: return <Tag className="h-3.5 w-3.5 text-white" />
+    }
+  }
+
   return (
-    <Card className="border-border bg-card">
-      <CardHeader className="border-b border-border/50 py-3 px-6">
-        <CardTitle className="text-sm font-bold font-mono flex items-center gap-2">
-          <Layers className="h-4 w-4 text-purple-400" /> bento_blocks_manager
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-6 space-y-6">
-        
-        {/* Active Blocks List */}
-        <div className="space-y-4">
-          <span className="text-xs font-mono text-muted-foreground block">Active Layout Cards</span>
-          {blocks.length === 0 ? (
-            <p className="text-3xs font-mono text-muted-foreground py-4 text-center border border-dashed border-border rounded-md">
-              No blocks added to Bento Layout yet.
+    <div className="space-y-6 animate-in fade-in-50 duration-300">
+      <div>
+        <h3 className="text-base font-bold text-foreground font-mono">./bento_blocks_manager</h3>
+        <p className="text-xs text-muted-foreground font-mono mt-0.5">
+          Configure profile bento grid layout by adding, positioning, and editing cards.
+        </p>
+      </div>
+
+      {/* Active Blocks List */}
+      <div className="space-y-3">
+        <span className="text-xs font-mono font-semibold text-muted-foreground flex items-center gap-1.5">
+          <Layers className="h-3.5 w-3.5 text-primary" /> Active Layout Cards
+        </span>
+
+        {blocks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center p-8 border border-dashed border-white/5 rounded-xl bg-black/10 text-center font-mono">
+            <Layers className="h-8 w-8 text-neutral-600 animate-pulse mb-2" />
+            <p className="text-3xs text-muted-foreground max-w-xs leading-relaxed">
+              No Bento cards added to the layout. Add a card below to design your portfolio grid structure.
             </p>
-          ) : (
-            <div className="space-y-3">
-              {blocks.map((block, idx) => {
-                const isExpanded = expandedBlockId === block.id
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {blocks.map((block, idx) => {
+              const isExpanded = expandedBlockId === block.id
 
-                return (
-                  <div key={block.id} className="border border-border rounded-lg bg-background overflow-hidden">
-                    
-                    {/* Header Row */}
-                    <div className="flex items-center justify-between p-3 bg-muted/20 border-b border-border/40 text-xs font-mono">
-                      <div className="flex items-center gap-2 truncate flex-1 mr-2">
-                        <button
-                          type="button"
-                          onClick={() => setExpandedBlockId(isExpanded ? null : block.id)}
-                          className="text-muted-foreground hover:text-foreground p-0.5"
-                        >
-                          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                        </button>
+              return (
+                <div 
+                  key={block.id} 
+                  className={`border transition-all duration-200 rounded-xl overflow-hidden bg-neutral-950/20 backdrop-blur-xs ${
+                    isExpanded ? "border-primary/20 shadow-xs" : "border-white/5 hover:border-white/10"
+                  }`}
+                >
+                  
+                  {/* Header Row */}
+                  <div className="flex items-center justify-between p-3.5 bg-neutral-900/10 font-mono text-xs select-none">
+                    <div className="flex items-center gap-2.5 truncate flex-1 mr-2">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedBlockId(isExpanded ? null : block.id)}
+                        className="text-neutral-500 hover:text-foreground p-0.5 rounded-md hover:bg-white/5 transition-all"
+                      >
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </button>
+                      <div className="flex items-center gap-1.5 truncate">
+                        {getBlockIcon(block.type)}
                         <span className="font-bold text-foreground truncate">{block.title}</span>
-                        <span className="text-3xs text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-xs uppercase">
-                          {block.type}
-                        </span>
                       </div>
-
-                      {/* Controls */}
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          disabled={idx === 0}
-                          onClick={() => moveUp(idx)}
-                          className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-1"
-                          title="Move Block Up"
-                        >
-                          <ArrowUp className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={idx === blocks.length - 1}
-                          onClick={() => moveDown(idx)}
-                          className="text-muted-foreground hover:text-foreground disabled:opacity-30 p-1"
-                          title="Move Block Down"
-                        >
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => removeBlock(block.id)}
-                          className="text-muted-foreground hover:text-destructive p-1 ml-1"
-                          title="Delete Block"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+                      <span className="text-[9px] font-bold font-mono px-1.5 py-0.5 bg-neutral-800/60 border border-white/5 text-neutral-400 rounded-md uppercase shrink-0">
+                        {block.type}
+                      </span>
                     </div>
 
-                    {/* Expandable Editor Pane */}
-                    {isExpanded && (
-                      <div className="p-4 space-y-4 border-t border-border/20 text-xs font-mono">
-                        
-                        {/* Title & Column Span */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <label className="text-3xs text-muted-foreground uppercase">Card Title</label>
-                            <input
-                              type="text"
-                              className="flex h-8 w-full rounded-md border border-input bg-card px-2.5 py-1 text-xs focus-visible:outline-hidden"
-                              value={block.title}
-                              onChange={(e) => updateBlock(block.id, { title: e.target.value })}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-3xs text-muted-foreground uppercase">Column Width Span</label>
-                            <select
-                              className="flex h-8 w-full rounded-md border border-input bg-card px-2 py-1 text-xs focus-visible:outline-hidden"
-                              value={block.colSpan || 1}
-                              onChange={(e) => updateBlock(block.id, { colSpan: parseInt(e.target.value, 10) })}
-                            >
-                              <option value={1}>1 Column (1/3 Width)</option>
-                              <option value={2}>2 Columns (2/3 Width)</option>
-                              <option value={3}>3 Columns (Full Width)</option>
-                            </select>
-                          </div>
+                    {/* Controls */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => moveUp(idx)}
+                        className="text-neutral-500 hover:text-white disabled:opacity-20 p-1.5 rounded-lg hover:bg-white/5 transition-all"
+                        title="Move Card Up"
+                      >
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={idx === blocks.length - 1}
+                        onClick={() => moveDown(idx)}
+                        className="text-neutral-500 hover:text-white disabled:opacity-20 p-1.5 rounded-lg hover:bg-white/5 transition-all"
+                        title="Move Card Down"
+                      >
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeBlock(block.id)}
+                        className="text-neutral-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-white/5 transition-all ml-1"
+                        title="Delete Card"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Expandable Editor Pane */}
+                  {isExpanded && (
+                    <div className="p-5 space-y-4 border-t border-white/5 font-mono text-xs bg-neutral-900/10">
+                      
+                      {/* Title & Column Span */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-3xs text-muted-foreground uppercase font-bold flex items-center gap-1">
+                            <Edit3 className="h-3 w-3" /> Card Title
+                          </label>
+                          <input
+                            type="text"
+                            className="flex h-9 w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 px-3 py-1.5 text-xs text-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all"
+                            value={block.title}
+                            onChange={(e) => updateBlock(block.id, { title: e.target.value })}
+                          />
                         </div>
-
-                        {/* Block-Type Specific Editor Forms */}
                         
-                        {/* MARKDOWN TYPE */}
-                        {block.type === "markdown" && (
-                          <div className="space-y-1">
-                            <label className="text-3xs text-muted-foreground uppercase block">
-                              Markdown Content (Shortcodes allowed)
-                            </label>
-                            <textarea
-                              rows={5}
-                              className="flex w-full rounded-md border border-input bg-card p-2 text-xs focus-visible:outline-hidden font-mono"
-                              value={block.content || ""}
-                              onChange={(e) => updateBlock(block.id, { content: e.target.value })}
-                            />
-                            <span className="text-[10px] text-muted-foreground block mt-1">
-                              Supports <code className="text-primary font-bold">&lt;Spotify id="trackId" /&gt;</code> and <code className="text-primary font-bold">&lt;TerminalPrompt command="cmd"&gt;output&lt;/TerminalPrompt&gt;</code> shortcodes.
-                            </span>
-                          </div>
-                        )}
+                        <div className="space-y-1.5">
+                          <label className="text-3xs text-muted-foreground uppercase font-bold flex items-center gap-1">
+                            <Layers className="h-3 w-3" /> Column Width Span
+                          </label>
+                          <select
+                            className="flex h-9 w-full rounded-lg border border-white/10 bg-[#121212] px-3 py-1 text-xs text-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all cursor-pointer"
+                            value={block.colSpan || 1}
+                            onChange={(e) => updateBlock(block.id, { colSpan: parseInt(e.target.value, 10) })}
+                          >
+                            <option value={1}>1 Column (1/3 Width)</option>
+                            <option value={2}>2 Columns (2/3 Width)</option>
+                            <option value={3}>3 Columns (Full Width)</option>
+                          </select>
+                        </div>
+                      </div>
 
-                        {/* SKILLS TYPE */}
-                        {block.type === "skills" && (
-                          <div className="space-y-1">
-                            <label className="text-3xs text-muted-foreground uppercase block">
-                              Skills (Comma Separated)
+                      {/* Block-Type Specific Editor Forms */}
+                      
+                      {/* MARKDOWN TYPE */}
+                      {block.type === "markdown" && (
+                        <div className="space-y-1.5">
+                          <label className="text-3xs text-muted-foreground uppercase font-bold flex items-center gap-1">
+                            <Terminal className="h-3 w-3" /> Markdown Content
+                          </label>
+                          <textarea
+                            rows={6}
+                            className="flex w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 p-3 text-xs text-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all font-mono leading-relaxed"
+                            value={block.content || ""}
+                            onChange={(e) => updateBlock(block.id, { content: e.target.value })}
+                          />
+                          <span className="text-[10px] text-muted-foreground block leading-normal mt-1.5">
+                            💡 Use shortcodes like <code className="text-primary font-bold">&lt;Spotify id="trackId" /&gt;</code> or <code className="text-primary font-bold">&lt;TerminalPrompt command="cmd"&gt;output&lt;/TerminalPrompt&gt;</code> to load widgets.
+                          </span>
+                        </div>
+                      )}
+
+                      {/* SKILLS TYPE */}
+                      {block.type === "skills" && (
+                        <div className="space-y-1.5">
+                          <label className="text-3xs text-muted-foreground uppercase font-bold flex items-center gap-1">
+                            <Cpu className="h-3 w-3" /> Skills (Comma Separated)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="HTML, CSS, JavaScript, React"
+                            className="flex h-9 w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 px-3 py-1.5 text-xs text-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all"
+                            value={block.skills ? block.skills.join(", ") : ""}
+                            onChange={(e) =>
+                              updateBlock(block.id, {
+                                skills: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                              })
+                            }
+                          />
+                        </div>
+                      )}
+
+                      {/* PROJECTS TYPE */}
+                      {block.type === "projects" && (
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <label className="text-3xs text-muted-foreground uppercase font-bold flex items-center gap-1">
+                              <Layers className="h-3 w-3" /> Project Nodes
                             </label>
-                            <input
-                              type="text"
-                              className="flex h-8 w-full rounded-md border border-input bg-card px-2.5 py-1 text-xs focus-visible:outline-hidden"
-                              value={block.skills ? block.skills.join(", ") : ""}
-                              onChange={(e) =>
+                            
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-7 px-2.5 gap-1 text-[10px] font-mono border-primary/20 hover:border-primary/40 hover:bg-primary/5 text-primary rounded-lg transition-all cursor-pointer"
+                              onClick={() =>
                                 updateBlock(block.id, {
-                                  skills: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                                  projects: [
+                                    ...(block.projects || []),
+                                    { title: "New Project", description: "Description here", link: "" },
+                                  ],
                                 })
                               }
-                            />
+                            >
+                              <Plus className="h-3 w-3" /> Add Project
+                            </Button>
                           </div>
-                        )}
-
-                        {/* PROJECTS TYPE */}
-                        {block.type === "projects" && (
+                          
                           <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <label className="text-3xs text-muted-foreground uppercase">Project List</label>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="h-6 gap-0.5 text-3xs font-mono border-primary/20 hover:border-primary text-primary"
-                                onClick={() =>
-                                  updateBlock(block.id, {
-                                    projects: [
-                                      ...(block.projects || []),
-                                      { title: "New Project", description: "Description here", link: "" },
-                                    ],
-                                  })
-                                }
-                              >
-                                <Plus className="h-3 w-3" /> Add Project
-                              </Button>
-                            </div>
-                            <div className="space-y-3">
-                              {block.projects?.map((proj: any, pIdx: number) => (
-                                <div key={pIdx} className="p-3 border border-border bg-card rounded-md space-y-2 relative">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      updateBlock(block.id, {
-                                        projects: block.projects.filter((_: any, idx: number) => idx !== pIdx),
-                                      })
-                                    }
-                                    className="absolute top-2 right-2 text-muted-foreground hover:text-destructive"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                  <div className="grid grid-cols-2 gap-2 pr-6">
+                            {block.projects?.map((proj: any, pIdx: number) => (
+                              <div key={pIdx} className="p-4 border border-white/5 bg-black/10 rounded-xl space-y-3 relative overflow-hidden group">
+                                <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-primary/20" />
+                                
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateBlock(block.id, {
+                                      projects: block.projects.filter((_: any, idx: number) => idx !== pIdx),
+                                    })
+                                  }
+                                  className="absolute top-2.5 right-2.5 text-neutral-500 hover:text-red-400 p-1 rounded-md hover:bg-white/5 transition-all"
+                                  title="Delete Project"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-6">
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] text-neutral-500 uppercase font-bold">Project Name</span>
                                     <input
                                       type="text"
                                       placeholder="Title"
-                                      className="flex h-7 w-full rounded-sm border border-input bg-background px-2 py-0.5 text-xs focus-visible:outline-hidden"
+                                      className="flex h-8 w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 px-3 py-1.5 text-xs text-foreground focus-visible:outline-hidden"
                                       value={proj.title}
                                       onChange={(e) => {
                                         const newProjs = [...block.projects]
@@ -269,10 +313,16 @@ export function BlockManager({ blocks, setBlocks }: BlockManagerProps) {
                                         updateBlock(block.id, { projects: newProjs })
                                       }}
                                     />
+                                  </div>
+                                  
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] text-neutral-500 uppercase font-bold flex items-center gap-1">
+                                      <Link className="h-2.5 w-2.5" /> URL Link
+                                    </span>
                                     <input
-                                      type="text"
-                                      placeholder="Link URL"
-                                      className="flex h-7 w-full rounded-sm border border-input bg-background px-2 py-0.5 text-xs focus-visible:outline-hidden"
+                                      type="url"
+                                      placeholder="https://..."
+                                      className="flex h-8 w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 px-3 py-1.5 text-xs text-foreground focus-visible:outline-hidden"
                                       value={proj.link || ""}
                                       onChange={(e) => {
                                         const newProjs = [...block.projects]
@@ -281,10 +331,14 @@ export function BlockManager({ blocks, setBlocks }: BlockManagerProps) {
                                       }}
                                     />
                                   </div>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  <span className="text-[9px] text-neutral-500 uppercase font-bold">Description</span>
                                   <textarea
                                     rows={2}
-                                    placeholder="Short description"
-                                    className="flex w-full rounded-sm border border-input bg-background p-2 text-xs focus-visible:outline-hidden"
+                                    placeholder="Brief technical description..."
+                                    className="flex w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 p-2.5 text-xs text-foreground focus-visible:outline-hidden leading-relaxed"
                                     value={proj.description}
                                     onChange={(e) => {
                                       const newProjs = [...block.projects]
@@ -293,52 +347,62 @@ export function BlockManager({ blocks, setBlocks }: BlockManagerProps) {
                                     }}
                                   />
                                 </div>
-                              ))}
-                            </div>
+                              </div>
+                            ))}
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        {/* TIMELINE TYPE */}
-                        {block.type === "timeline" && (
+                      {/* TIMELINE TYPE */}
+                      {block.type === "timeline" && (
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <label className="text-3xs text-muted-foreground uppercase font-bold flex items-center gap-1">
+                              <Calendar className="h-3 w-3" /> Timeline Milestones
+                            </label>
+                            
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-7 px-2.5 gap-1 text-[10px] font-mono border-primary/20 hover:border-primary/40 hover:bg-primary/5 text-primary rounded-lg transition-all cursor-pointer"
+                              onClick={() =>
+                                updateBlock(block.id, {
+                                  items: [
+                                    ...(block.items || []),
+                                    { title: "New Milestone", date: "Date", description: "Details" },
+                                  ],
+                                })
+                              }
+                            >
+                              <Plus className="h-3 w-3" /> Add Event
+                            </Button>
+                          </div>
+                          
                           <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <label className="text-3xs text-muted-foreground uppercase">Timeline Entries</label>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="h-6 gap-0.5 text-3xs font-mono border-primary/20 hover:border-primary text-primary"
-                                onClick={() =>
-                                  updateBlock(block.id, {
-                                    items: [
-                                      ...(block.items || []),
-                                      { title: "New Milestone", date: "Date", description: "Details" },
-                                    ],
-                                  })
-                                }
-                              >
-                                <Plus className="h-3 w-3" /> Add Event
-                              </Button>
-                            </div>
-                            <div className="space-y-3">
-                              {block.items?.map((item: any, tIdx: number) => (
-                                <div key={tIdx} className="p-3 border border-border bg-card rounded-md space-y-2 relative">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      updateBlock(block.id, {
-                                        items: block.items.filter((_: any, idx: number) => idx !== tIdx),
-                                      })
-                                    }
-                                    className="absolute top-2 right-2 text-muted-foreground hover:text-destructive"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                  <div className="grid grid-cols-2 gap-2 pr-6">
+                            {block.items?.map((item: any, tIdx: number) => (
+                              <div key={tIdx} className="p-4 border border-white/5 bg-black/10 rounded-xl space-y-3 relative overflow-hidden group">
+                                <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-primary/20" />
+                                
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateBlock(block.id, {
+                                      items: block.items.filter((_: any, idx: number) => idx !== tIdx),
+                                    })
+                                  }
+                                  className="absolute top-2.5 right-2.5 text-neutral-500 hover:text-red-400 p-1 rounded-md hover:bg-white/5 transition-all"
+                                  title="Delete Event"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-6">
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] text-neutral-500 uppercase font-bold">Event Title</span>
                                     <input
                                       type="text"
-                                      placeholder="Event / Title"
-                                      className="flex h-7 w-full rounded-sm border border-input bg-background px-2 py-0.5 text-xs focus-visible:outline-hidden"
+                                      placeholder="e.g. Hackathon Winner"
+                                      className="flex h-8 w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 px-3 py-1.5 text-xs text-foreground focus-visible:outline-hidden"
                                       value={item.title}
                                       onChange={(e) => {
                                         const newItems = [...block.items]
@@ -346,10 +410,14 @@ export function BlockManager({ blocks, setBlocks }: BlockManagerProps) {
                                         updateBlock(block.id, { items: newItems })
                                       }}
                                     />
+                                  </div>
+                                  
+                                  <div className="space-y-1">
+                                    <span className="text-[9px] text-neutral-500 uppercase font-bold">Event Date</span>
                                     <input
                                       type="text"
-                                      placeholder="Date (e.g. 2026)"
-                                      className="flex h-7 w-full rounded-sm border border-input bg-background px-2 py-0.5 text-xs focus-visible:outline-hidden"
+                                      placeholder="e.g. Dec 2026"
+                                      className="flex h-8 w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 px-3 py-1.5 text-xs text-foreground focus-visible:outline-hidden"
                                       value={item.date}
                                       onChange={(e) => {
                                         const newItems = [...block.items]
@@ -358,10 +426,14 @@ export function BlockManager({ blocks, setBlocks }: BlockManagerProps) {
                                       }}
                                     />
                                   </div>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  <span className="text-[9px] text-neutral-500 uppercase font-bold">Details</span>
                                   <input
                                     type="text"
-                                    placeholder="Short description"
-                                    className="flex h-7 w-full rounded-sm border border-input bg-background px-2 py-0.5 text-xs focus-visible:outline-hidden"
+                                    placeholder="Milestone description..."
+                                    className="flex h-8 w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 px-3 py-1.5 text-xs text-foreground focus-visible:outline-hidden"
                                     value={item.description}
                                     onChange={(e) => {
                                       const newItems = [...block.items]
@@ -370,96 +442,108 @@ export function BlockManager({ blocks, setBlocks }: BlockManagerProps) {
                                     }}
                                   />
                                 </div>
-                              ))}
-                            </div>
+                              </div>
+                            ))}
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        {/* CODE TYPE */}
-                        {block.type === "code" && (
-                          <div className="space-y-4">
-                            <div className="space-y-1">
-                              <label className="text-3xs text-muted-foreground uppercase block font-mono">Custom HTML Markup</label>
-                              <textarea
-                                rows={4}
-                                className="flex w-full rounded-md border border-input bg-card p-2.5 text-xs focus-visible:outline-hidden font-mono text-emerald-400"
-                                value={block.html || ""}
-                                onChange={(e) => updateBlock(block.id, { html: e.target.value })}
-                                placeholder="<h3>Hello</h3>\n<p>Your HTML here</p>"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-3xs text-muted-foreground uppercase block font-mono">Custom CSS Stylesheet</label>
-                              <textarea
-                                rows={4}
-                                className="flex w-full rounded-md border border-input bg-card p-2.5 text-xs focus-visible:outline-hidden font-mono text-purple-400"
-                                value={block.css || ""}
-                                onChange={(e) => updateBlock(block.id, { css: e.target.value })}
-                                placeholder="h3 { color: cyan; }"
-                              />
-                            </div>
-                            <span className="text-[10px] text-muted-foreground block font-mono leading-relaxed mt-1">
-                              ⚠️ Rendered inside a strictly sandboxed &lt;iframe&gt;. Javascript is disabled and origin is isolated for security.
-                            </span>
+                      {/* CODE TYPE */}
+                      {block.type === "code" && (
+                        <div className="space-y-4">
+                          <div className="space-y-1.5">
+                            <label className="text-3xs text-muted-foreground uppercase font-bold flex items-center gap-1">
+                              <Code2 className="h-3 w-3 text-emerald-400" /> Custom HTML Markup
+                            </label>
+                            <textarea
+                              rows={5}
+                              className="flex w-full rounded-lg border border-white/10 bg-[#121212] p-3 text-xs text-emerald-400 focus-visible:outline-hidden font-mono leading-relaxed"
+                              value={block.html || ""}
+                              onChange={(e) => updateBlock(block.id, { html: e.target.value })}
+                              placeholder="<h3>Hello Widget</h3>"
+                            />
                           </div>
-                        )}
-
-                        {/* METRICS TYPE */}
-                        {block.type === "metrics" && (
-                          <div className="p-3 border border-dashed border-border rounded-md text-center bg-muted/10">
-                            <span className="text-[10px] text-muted-foreground">
-                              This card displays the metrics defined in the **diagnostic_metrics** form card (located below general info).
-                            </span>
+                          
+                          <div className="space-y-1.5">
+                            <label className="text-3xs text-muted-foreground uppercase font-bold flex items-center gap-1">
+                              <Terminal className="h-3 w-3 text-purple-400" /> Custom CSS Styles
+                            </label>
+                            <textarea
+                              rows={5}
+                              className="flex w-full rounded-lg border border-white/10 bg-[#121212] p-3 text-xs text-purple-400 focus-visible:outline-hidden font-mono leading-relaxed"
+                              value={block.css || ""}
+                              onChange={(e) => updateBlock(block.id, { css: e.target.value })}
+                              placeholder="h3 { color: cyan; }"
+                            />
                           </div>
-                        )}
+                          
+                          <span className="text-[10px] text-red-400/80 block leading-normal pt-1 flex items-start gap-1">
+                            ⚠️ Rendered in an isolated iframe. Scripts disabled for security.
+                          </span>
+                        </div>
+                      )}
 
-                      </div>
-                    )}
+                      {/* METRICS TYPE */}
+                      {block.type === "metrics" && (
+                        <div className="p-4 border border-dashed border-white/5 rounded-xl text-center bg-black/10 flex flex-col items-center">
+                          <Eye className="h-6 w-6 text-neutral-600 mb-1" />
+                          <span className="text-3xs text-muted-foreground max-w-xs leading-relaxed">
+                            Telemetry card. Renders the active telemetry metrics defined under the **Metrics** workspace tab.
+                          </span>
+                        </div>
+                      )}
 
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+                    </div>
+                  )}
 
-        {/* Add Block Elements */}
-        <div className="border-t border-border/50 pt-4 flex gap-3 items-end font-mono text-xs">
-          <div className="flex-1 space-y-1">
-            <label className="text-3xs text-muted-foreground uppercase">Card Type</label>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Add Block Elements */}
+      <div className="border-t border-white/5 pt-5 space-y-4">
+        <span className="text-xs font-mono font-bold text-white block">Add Bento Card Layout</span>
+        
+        <div className="flex flex-col md:flex-row gap-3 items-end font-mono text-xs">
+          <div className="flex-1 w-full space-y-1.5">
+            <label className="text-3xs text-muted-foreground uppercase font-bold">Card Type</label>
             <select
-              className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus-visible:outline-hidden"
+              className="flex h-9 w-full rounded-lg border border-white/10 bg-[#121212] px-3 py-1 text-xs text-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all cursor-pointer"
               value={newType}
               onChange={(e: any) => setNewType(e.target.value)}
             >
-              <option value="markdown">Markdown / Shortcodes</option>
+              <option value="markdown">Markdown / Widget Prompt</option>
               <option value="skills">Skills Tag List</option>
-              <option value="projects">Projects Grid</option>
+              <option value="projects">Projects Grid List</option>
               <option value="timeline">Timeline Milestones</option>
               <option value="metrics">Compilation Metrics</option>
-              <option value="code">Custom HTML / CSS</option>
+              <option value="code">Custom Sandboxed iframe</option>
             </select>
           </div>
-          <div className="flex-1 space-y-1">
-            <label className="text-3xs text-muted-foreground uppercase">Card Title</label>
+          
+          <div className="flex-1 w-full space-y-1.5">
+            <label className="text-3xs text-muted-foreground uppercase font-bold">Card Title</label>
             <input
               type="text"
-              className="flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs focus-visible:outline-hidden"
-              placeholder="e.g. techStack"
+              className="flex h-9 w-full rounded-lg border border-white/10 bg-black/20 hover:bg-black/35 px-3 py-1.5 text-xs text-foreground placeholder:text-neutral-600 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all"
+              placeholder="e.g. systemLog"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
             />
           </div>
+          
           <Button
             type="button"
-            size="sm"
-            className="h-8 gap-1 font-mono text-3xs bg-primary text-primary-foreground"
+            className="h-9 w-full md:w-auto px-4 gap-1.5 font-mono text-xs bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all shadow-md shrink-0 cursor-pointer"
             onClick={addBlock}
           >
-            <Plus className="h-3.5 w-3.5" /> Add Card
+            <Plus className="h-4 w-4" /> Add Card
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

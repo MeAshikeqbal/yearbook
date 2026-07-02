@@ -3,13 +3,100 @@
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { BookOpen, Menu, X, ShieldAlert, Edit3, LogOut, Image, Bug, Book } from "lucide-react"
+import { 
+  BookOpen, Menu, X, ShieldAlert, Edit3, LogOut, 
+  Image, Bug, Book, UploadCloud, AlertTriangle, Loader2 
+} from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export function Header() {
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
+  const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // ID Upload inside Banner State
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [idFile, setIdFile] = useState<File | null>(null)
+  const [idPreview, setIdPreview] = useState<string | null>(null)
+  const [idUploading, setIdUploading] = useState(false)
+  const [idError, setIdError] = useState("")
+
+  const handleIdFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0]
+    if (selected) {
+      if (selected.size > 5 * 1024 * 1024) {
+        setIdError("File size exceeds 5MB limit.")
+        return
+      }
+      setIdFile(selected)
+      setIdPreview(URL.createObjectURL(selected))
+    }
+  }
+
+  const handleIdUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!idFile) return
+    setIdUploading(true)
+    setIdError("")
+
+    try {
+      // 1. Get presigned R2 upload URL
+      const urlRes = await fetch("/api/upload-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: idFile.name,
+          contentType: idFile.type,
+          folder: "id-cards",
+        }),
+      })
+
+      if (!urlRes.ok) {
+        const data = await urlRes.json()
+        throw new Error(data.error || "Failed to get upload authorization.")
+      }
+
+      const { uploadUrl, publicUrl } = await urlRes.json()
+
+      // 2. Put file to R2
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": idFile.type },
+        body: idFile,
+      })
+
+      if (!uploadRes.ok) {
+        throw new Error("Failed to upload image file to Cloudflare storage.")
+      }
+
+      // 3. Post to db
+      const dbRes = await fetch("/api/auth/upload-id", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idCardUrl: publicUrl }),
+      })
+
+      if (!dbRes.ok) {
+        const data = await dbRes.json()
+        throw new Error(data.error || "Failed to update user profile in database.")
+      }
+
+      // Clean up and refresh
+      setIdFile(null)
+      setIdPreview(null)
+      setUploadOpen(false)
+      
+      // Update NextAuth session client side
+      await updateSession()
+      router.refresh()
+    } catch (err: any) {
+      setIdError(err.message || "An unexpected error occurred.")
+    } finally {
+      setIdUploading(false)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-md border-border">
@@ -47,7 +134,7 @@ export function Header() {
             <Bug className="h-3.5 w-3.5" /> ./bugs
           </Link>
 
-          {session?.user.role === "ADMIN" && (
+          {(session?.user.role === "ADMIN" || session?.user.role === "MODERATOR") && (
             <Link
               href="/admin"
               className="text-sm font-mono text-amber-500 hover:text-amber-400 transition-colors flex items-center gap-1"
@@ -135,7 +222,7 @@ export function Header() {
               <Bug className="h-4 w-4" /> ./bugs
             </Link>
 
-            {session?.user.role === "ADMIN" && (
+            {(session?.user.role === "ADMIN" || session?.user.role === "MODERATOR") && (
               <Link
                 href="/admin"
                 className="text-sm font-mono text-amber-500 hover:text-amber-400 transition-colors py-2 flex items-center gap-2"
@@ -174,6 +261,130 @@ export function Header() {
               )}
             </div>
           </nav>
+        </div>
+      )}
+
+      {/* Dynamic Verification Banners */}
+      {session && session.user.role !== "ADMIN" && session.user.role !== "MODERATOR" && session.user.status !== "APPROVED" && (
+        <div className={`w-full py-2 px-4 text-center text-xs font-mono border-t flex flex-wrap items-center justify-center gap-2 ${
+          session.user.status === "REJECTED" 
+            ? "bg-destructive/10 border-destructive/20 text-destructive"
+            : "bg-amber-500/10 border-amber-500/20 text-amber-500 animate-pulse"
+        }`}>
+          {session.user.status === "REJECTED" ? (
+            <span className="flex items-center gap-1"><AlertTriangle className="h-3.5 w-3.5" /> [ACCESS_LOCKED]: Profile verification rejected. Contact administration for assistance.</span>
+          ) : session.user.idCardUrl ? (
+            <span>[PENDING_VERIFICATION]: Student ID submitted. A moderator will review your account shortly.</span>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span>[ACTION_REQUIRED]: Upload your Student ID card photo to request profile activation.</span>
+              <Button 
+                onClick={() => setUploadOpen(true)}
+                variant="outline" 
+                className="h-6 px-2 text-[10px] border-amber-500/30 text-amber-500 hover:bg-amber-500/10 bg-transparent font-mono transition-all duration-150"
+              >
+                Upload ID Card
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ID UPLOAD DIALOG FOR BANNER */}
+      {uploadOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="relative w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg space-y-4">
+            <button
+              onClick={() => {
+                setUploadOpen(false)
+                setIdPreview(null)
+                setIdFile(null)
+                setIdError("")
+              }}
+              className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="border-b border-border pb-3">
+              <h3 className="text-lg font-semibold font-mono">Verify Student Identity</h3>
+              <p className="text-xs text-muted-foreground font-mono mt-1">
+                Upload your Student ID Card photo to request verification.
+              </p>
+            </div>
+
+            {idError && (
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-md p-3 text-xs font-mono text-center">
+                [error]: {idError}
+              </div>
+            )}
+
+            <form onSubmit={handleIdUploadSubmit} className="space-y-4">
+              <div className="border border-dashed border-border rounded-md p-6 bg-background/50 hover:bg-muted/50 transition-colors flex flex-col items-center justify-center text-center cursor-pointer relative min-h-32">
+                {idPreview ? (
+                  <div className="relative w-full max-h-40 overflow-hidden rounded border border-border">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={idPreview} alt="ID preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIdFile(null)
+                        setIdPreview(null)
+                      }}
+                      className="absolute top-2 right-2 bg-black/75 hover:bg-black/90 text-white rounded-full p-1 border border-border/30"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      required
+                      onChange={handleIdFileChange}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      disabled={idUploading}
+                    />
+                    <UploadCloud className="h-8 w-8 text-muted-foreground/60 mb-2 animate-pulse" />
+                    <span className="text-xs font-mono text-muted-foreground">Select Student ID photo</span>
+                    <span className="text-3xs text-muted-foreground/50 font-mono mt-1">JPEG, PNG up to 5MB</span>
+                  </>
+                )}
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="font-mono text-xs"
+                  onClick={() => {
+                    setUploadOpen(false)
+                    setIdPreview(null)
+                    setIdFile(null)
+                    setIdError("")
+                  }}
+                  disabled={idUploading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  className="font-mono text-xs"
+                  disabled={!idFile || idUploading}
+                >
+                  {idUploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...
+                    </>
+                  ) : (
+                    "Submit Verification"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </header>
