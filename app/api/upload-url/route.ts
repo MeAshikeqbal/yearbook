@@ -8,16 +8,20 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-
-    // Verify authorized user
-    if (!session || (session.user.status !== "APPROVED" && session.user.role !== "ADMIN")) {
-      return NextResponse.json({ error: "Unauthorized. Account pending verification." }, { status: 403 });
-    }
-
     const { filename, contentType, folder } = await req.json();
 
     if (!filename || !contentType) {
       return NextResponse.json({ error: "Missing filename or contentType" }, { status: 400 });
+    }
+
+    const cleanFolderName = folder || "memories";
+
+    // Security Check: Only allow anonymous uploads to the "id-cards" folder.
+    // All other uploads (e.g. memories) require an APPROVED student or ADMIN session.
+    if (cleanFolderName !== "id-cards") {
+      if (!session || (session.user.status !== "APPROVED" && session.user.role !== "ADMIN")) {
+        return NextResponse.json({ error: "Unauthorized. Account pending verification." }, { status: 403 });
+      }
     }
 
     const s3 = getR2Client();
@@ -26,8 +30,8 @@ export async function POST(req: Request) {
     }
 
     const fileExtension = filename.split(".").pop();
-    const cleanFolderName = folder || "memories";
-    const key = `${cleanFolderName}/${session.user.username}-${Date.now()}.${fileExtension}`;
+    const uniqueId = session ? session.user.username : `anon-${crypto.randomUUID()}`;
+    const key = `${cleanFolderName}/${uniqueId}-${Date.now()}.${fileExtension}`;
 
     const command = new PutObjectCommand({
       Bucket: r2BucketName,

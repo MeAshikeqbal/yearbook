@@ -7,8 +7,8 @@ export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    // Verify session and ADMIN role
-    if (!session || session.user.role !== "ADMIN") {
+    // Verify session and ADMIN or MODERATOR role
+    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "MODERATOR")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

@@ -11,6 +11,7 @@ declare module "next-auth" {
     role: string;
     status: string;
     username: string;
+    idCardUrl?: string | null;
   }
   interface Session {
     user: {
@@ -21,6 +22,7 @@ declare module "next-auth" {
       role: string;
       status: string;
       username: string;
+      idCardUrl?: string | null;
     };
   }
 }
@@ -31,6 +33,8 @@ declare module "next-auth/jwt" {
     role: string;
     status: string;
     username: string;
+    idCardUrl?: string | null;
+    lastChecked?: number;
   }
 }
 
@@ -48,6 +52,7 @@ export const authOptions: NextAuthOptions = {
           username: profile.login,
           role: "STUDENT",
           status: "PENDING",
+          idCardUrl: null,
         };
       },
     }),
@@ -83,6 +88,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           status: user.status,
           username: user.studentProfile?.username || "",
+          idCardUrl: user.idCardUrl || null,
         };
       },
     }),
@@ -94,6 +100,7 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.status = user.status;
         token.username = user.username;
+        token.idCardUrl = user.idCardUrl || null;
       }
       
       if (account?.provider === "github" && profile) {
@@ -148,15 +155,54 @@ export const authOptions: NextAuthOptions = {
         token.role = dbUser.role;
         token.status = dbUser.status;
         token.username = dbUser.studentProfile?.username || githubUsername;
+        token.idCardUrl = dbUser.idCardUrl || null;
       }
+
+      // Check the database for latest status/role every 10 seconds
+      if (token.id) {
+        const now = Date.now();
+        const cooldown = 10000; // 10s cooldown
+        if (!token.lastChecked || now - token.lastChecked > cooldown) {
+          try {
+            const dbUser = await prisma.user.findUnique({
+              where: { id: token.id },
+              select: {
+                role: true,
+                status: true,
+                idCardUrl: true,
+                studentProfile: {
+                  select: { username: true }
+                }
+              }
+            });
+
+            if (dbUser) {
+              token.role = dbUser.role;
+              token.status = dbUser.status;
+              token.idCardUrl = dbUser.idCardUrl || null;
+              token.username = dbUser.studentProfile?.username || token.username;
+              token.lastChecked = now;
+            } else {
+              token.status = "DELETED";
+            }
+          } catch (e) {
+            console.error("Error updating JWT token from DB:", e);
+          }
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token) {
+        if (token.status === "DELETED") {
+          return null as any;
+        }
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.status = token.status;
         session.user.username = token.username;
+        session.user.idCardUrl = token.idCardUrl || null;
       }
       return session;
     },

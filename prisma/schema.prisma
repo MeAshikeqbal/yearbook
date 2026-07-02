@@ -14,6 +14,7 @@ model User {
   githubId       String?         @unique
   role           String          @default("STUDENT") // "ADMIN" or "STUDENT"
   status         String          @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  idCardUrl      String?         // R2 storage URL for ID photo verification
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   studentProfile Student?

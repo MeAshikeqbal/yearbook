@@ -4,10 +4,10 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, username, role } = await req.json();
+    const { name, email, password, username, role, idCardUrl } = await req.json();
 
-    if (!name || !email || !password || !username) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!name || !email || !password || !username || !idCardUrl) {
+      return NextResponse.json({ error: "Missing required fields (including Student ID card photo)" }, { status: 400 });
     }
 
     // Basic email format check
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
         password: hashedPassword,
         role: "STUDENT",
         status: "PENDING",
+        idCardUrl,
         studentProfile: {
           create: {
             username: username.toLowerCase().trim(),

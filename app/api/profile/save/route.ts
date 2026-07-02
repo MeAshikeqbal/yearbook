@@ -39,15 +39,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // Check ownership or admin role
+    // Check ownership, approval status, or staff (admin/moderator) role
     const isOwner = session.user.id === student.userId;
-    const isAdmin = session.user.role === "ADMIN";
+    const isStaff = session.user.role === "ADMIN" || session.user.role === "MODERATOR";
+    const isApproved = session.user.status === "APPROVED";
 
-    console.log("[SAVE_PROFILE_API] Permission Check:", { isOwner, isAdmin, studentUserId: student.userId, sessionUserId: session.user.id });
+    console.log("[SAVE_PROFILE_API] Permission Check:", { isOwner, isStaff, isApproved, studentUserId: student.userId, sessionUserId: session.user.id });
 
-    if (!isOwner && !isAdmin) {
-      console.error("[SAVE_PROFILE_API] Error: Forbidden (user is neither owner nor admin)");
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!isStaff && (!isOwner || !isApproved)) {
+      console.error("[SAVE_PROFILE_API] Error: Forbidden (user is neither staff nor approved owner)");
+      return NextResponse.json({ error: "Forbidden. Account must be approved to edit details." }, { status: 403 });
     }
 
     // Update profile in database
