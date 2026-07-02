@@ -260,7 +260,7 @@ export default function DocsPage() {
                 </button>
               </div>
               <p className="text-3xs text-muted-foreground">
-                Passing <code className="text-primary font-bold">Accept: text/plain</code> or parameter <code className="text-primary font-bold">?cli=true</code> bypasses JSON responses to output an ASCII-art rendering of the student's profile directly to standard output.
+                Passing <code className="text-primary font-bold">Accept: text/plain</code> or parameter <code className="text-primary font-bold">?cli=true</code> bypasses JSON responses to output an ASCII-art rendering of the student&apos;s profile directly to standard output.
               </p>
             </div>
 
