@@ -52,5 +52,11 @@ export default async function BrowsePage() {
     customCss: s.customCss,
   }))
 
-  return <BrowseClient initialStudents={formattedStudents} />
+  return (
+    <>
+      <Header />
+      <BrowseClient initialStudents={formattedStudents} />
+      <Footer />
+    </>
+  )
 }

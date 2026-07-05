@@ -8,6 +8,9 @@ import { Github, Linkedin, Edit3, ArrowLeft, Terminal, Cpu, Bug, Coffee, Calenda
 import ProfileCard from "@/components/ui/ProfileCard"
 import { ShortcodeParser } from "@/components/profile/shortcode-parser"
 import { getAvatarExtension } from "@/lib/profile-template"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+
 
 interface Student {
   username: string
@@ -145,7 +148,9 @@ export function ProfileView({ student, isOwner, isApproved }: ProfileViewProps) 
   }
 
   return (
-    <div className="min-h-svh bg-background text-foreground py-8 md:py-16 relative student-profile-wrapper">
+    <>
+      <Header />
+      <div className="min-h-svh bg-background text-foreground py-8 md:py-16 relative student-profile-wrapper">
       
       {/* CUSTOM STUDENT CSS */}
       {student.customCss && (
@@ -405,5 +410,7 @@ export function ProfileView({ student, isOwner, isApproved }: ProfileViewProps) 
         </div>
       </div>
     </div>
+    <Footer />
+  </>
   )
 }

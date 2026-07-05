@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { getCsrfToken } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Save, Terminal, Loader2, ArrowLeft, Folder, FileCode, Code2, Layers, User, Cpu, RefreshCw } from "lucide-react"
+import { Save, Terminal, Loader2, ArrowLeft, Folder, FileCode, Code2, Layers, User, Cpu, RefreshCw, BookOpen } from "lucide-react"
 
 // Import custom components locally
 import { ConfigForm } from "./config-form"
@@ -342,9 +342,27 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
         <MatrixTransition onComplete={() => setShowMatrixTransition(false)} />
       )}
 
+      {/* MOBILE WARNING FOR ADVANCED IDE */}
+      {advanceMode && !showMatrixTransition && (
+        <div className="fixed inset-0 z-50 bg-[#1e1e1e] flex md:hidden flex-col items-center justify-center p-6 text-center text-gray-300 font-mono space-y-5 select-none">
+          <Terminal className="h-12 w-12 text-purple-500 animate-pulse" />
+          <h3 className="text-base font-bold text-white uppercase tracking-wider">[ACCESS_RESTRICTED]</h3>
+          <p className="text-xs leading-relaxed max-w-xs text-neutral-400">
+            The Advanced Profile IDE is optimized for desktop viewports. Please switch to a desktop screen to edit code.
+          </p>
+          <Button
+            type="button"
+            onClick={handleToggleAdvanceMode}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-mono text-xs h-9 px-4 rounded-lg cursor-pointer"
+          >
+            Switch to Standard Mode
+          </Button>
+        </div>
+      )}
+
       {/* FULL SCREEN ADVANCED IDE LAYOUT */}
       {advanceMode && !showMatrixTransition && (
-        <div className="fixed inset-0 z-50 bg-[#1e1e1e] flex flex-col text-gray-300 font-mono select-none">
+        <div className="fixed inset-0 z-50 bg-[#1e1e1e] hidden md:flex flex-col text-gray-300 font-mono select-none">
           
           {/* Header Bar */}
           <div className="bg-[#2d2d2d] border-b border-[#1e1e1e] h-12 flex items-center justify-between px-4">
@@ -374,6 +392,14 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
                   />
                 </button>
               </div>
+              <span className="text-gray-700">|</span>
+              <Button
+                type="button"
+                onClick={() => window.open("/docs", "_blank")}
+                className="bg-neutral-800 hover:bg-neutral-700 text-gray-300 border border-white/5 font-mono text-[10px] h-8 px-3 flex items-center gap-1.5 cursor-pointer"
+              >
+                <BookOpen className="h-3 w-3 text-purple-400" /> API & CSS Docs
+              </Button>
               <span className="text-gray-700">|</span>
               <Button
                 type="button"
@@ -775,8 +801,8 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
             </div>
             
             <div className="flex items-center gap-3">
-              {/* Premium Toggle Switch in Normal Layout */}
-              <div className="flex items-center gap-2.5 bg-neutral-900/60 border border-white/5 px-3 py-1.5 rounded-xl select-none transition-all hover:border-white/10">
+              {/* Premium Toggle Switch in Normal Layout - Desktop Only */}
+              <div className="hidden md:flex items-center gap-2.5 bg-neutral-900/60 border border-white/5 px-3 py-1.5 rounded-xl select-none transition-all hover:border-white/10">
                 <span className="text-xs font-mono text-neutral-400 font-semibold">Advanced Mode</span>
                 <button
                   type="button"
@@ -910,11 +936,22 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
 
                   {activeTab === "style" && (
                     <div className="space-y-4 animate-in fade-in-50 duration-300">
-                      <div>
-                        <h3 className="text-base font-bold text-foreground font-mono">./stylesheet_override.css</h3>
-                        <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                          Inject scoped CSS rules directly into your profile card and bento wrappers.
-                        </p>
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                          <h3 className="text-base font-bold text-foreground font-mono">./stylesheet_override.css</h3>
+                          <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                            Inject scoped CSS rules directly into your profile card and bento wrappers.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open("/docs", "_blank")}
+                          className="h-8 text-[11px] font-mono border-white/10 hover:bg-neutral-900 flex items-center gap-1.5 shrink-0 select-none"
+                        >
+                          <BookOpen className="h-3.5 w-3.5 text-primary" /> View CSS Schema Docs
+                        </Button>
                       </div>
 
                       <div className="relative rounded-lg overflow-hidden border border-white/10 bg-[#121212]">

@@ -221,11 +221,11 @@ export default function MemoriesPage() {
           </div>
         ) : (
           /* Masonry Columns Layout */
-          <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-6 space-y-6">
+          <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-6">
             {filteredMemories.map((memory) => (
               <div
                 key={memory.id}
-                className="break-inside-avoid bg-card border border-border rounded-lg overflow-hidden group cursor-pointer hover:border-primary/50 transition-all duration-300 shadow-xs hover:shadow-md"
+                className="break-inside-avoid mb-6 bg-card border border-border rounded-lg overflow-hidden group cursor-pointer hover:border-primary/50 transition-all duration-300 shadow-xs hover:shadow-md"
                 onClick={() => setActiveMemory(memory)}
               >
                 <div className="relative overflow-hidden aspect-auto bg-muted">

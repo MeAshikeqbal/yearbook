@@ -19,10 +19,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid CSRF headers" }, { status: 403 });
     }
 
-    const { name, email, password, username, role, idCardUrl } = await req.json();
+    const { name, email, password, username, role, idCardUrl, consent } = await req.json();
 
     if (!name || !email || !password || !username || !idCardUrl) {
       return NextResponse.json({ error: "Missing required fields (including Student ID card photo)" }, { status: 400 });
+    }
+
+    if (consent !== true) {
+      return NextResponse.json({ error: "You must accept the Terms of Service & Privacy Policy and certify your Student ID to register." }, { status: 400 });
     }
 
     // Basic email format check
