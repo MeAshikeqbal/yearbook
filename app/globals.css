@@ -193,6 +193,34 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Custom Redesign Animations */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-glow: pulse-glow 8s ease-in-out infinite;
+  --animate-typing-cursor: typing-cursor 1s step-end infinite;
+  --animate-scanline: scanline 8s linear infinite;
+  --animate-fade-in-up: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(0.5deg); }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { transform: opacity(0.1) scale(1); filter: blur(40px); }
+    50% { transform: opacity(0.25) scale(1.05); filter: blur(55px); }
+  }
+  @keyframes typing-cursor {
+    from, to { border-color: transparent }
+    50% { border-color: var(--primary) }
+  }
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 
 @layer base {
@@ -224,5 +252,442 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════
+   FLIPBOOK-SPECIFIC STYLES — Warm Yearbook Theme
+   ═══════════════════════════════════════════════════════ */
 
+/* ─── Container ─── */
+.flipbook-container {
+  min-height: 100svh;
+  background: #1A0E08;
+  color: #FDF8F0;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+}
+
+.flipbook-container--fullpage {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  padding: 1rem;
+  transition: background 0.3s ease;
+}
+
+/* ─── Full-page background ─── */
+.flipbook-fullpage-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(ellipse at center top, #2C1810 0%, #1A0E08 60%, #0D0704 100%);
+}
+
+.flipbook-fullpage-bg__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%);
+}
+
+/* ─── Inner layout ─── */
+.flipbook-inner {
+  max-width: 64rem;
+  width: 100%;
+  margin: auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ─── Toolbar ─── */
+.flipbook-toolbar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(201, 169, 89, 0.15);
+  padding-bottom: 0.75rem;
+}
+
+.flipbook-toolbar__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flipbook-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ─── Buttons ─── */
+.flipbook-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 11px;
+  color: #9B8E82;
+  background: transparent;
+  border: 1px solid rgba(201, 169, 89, 0.15);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.03em;
+}
+
+.flipbook-btn:hover {
+  color: #FDF8F0;
+  border-color: rgba(201, 169, 89, 0.35);
+  background: rgba(201, 169, 89, 0.08);
+}
+
+.flipbook-btn--desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .flipbook-btn--desktop {
+    display: flex;
+  }
+}
+
+/* ─── Loading ─── */
+.flipbook-loading {
+  height: 450px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Book area ─── */
+.flipbook-book-area {
+  position: relative;
+  margin: auto;
+  padding: 0.5rem 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flipbook-book-area--loading {
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ─── Hint overlay ─── */
+.flipbook-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.flipbook-hint__inner {
+  background: rgba(26, 14, 8, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid rgba(201, 169, 89, 0.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.flipbook-hint-fade {
+  animation: flipbook-hint-appear 0.4s ease-out, flipbook-hint-dismiss 0.6s ease-in 4s forwards;
+}
+
+@keyframes flipbook-hint-appear {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes flipbook-hint-dismiss {
+  from { opacity: 1; }
+  to { opacity: 0; pointer-events: none; }
+}
+
+/* ─── Leather wrapper ─── */
+.flipbook-leather-wrapper {
+  position: relative;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #3D2518 0%, #2C1810 50%, #1A0E08 100%);
+  border: 4px solid #1A0E08;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.7),
+    inset 0 1px 2px rgba(201, 169, 89, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Gold corner plates ─── */
+.flipbook-corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.flipbook-corner--tl {
+  top: 2px;
+  left: 2px;
+  border-top: 2px solid rgba(201, 169, 89, 0.25);
+  border-left: 2px solid rgba(201, 169, 89, 0.25);
+  border-radius: 6px 0 0 0;
+}
+
+.flipbook-corner--tr {
+  top: 2px;
+  right: 2px;
+  border-top: 2px solid rgba(201, 169, 89, 0.25);
+  border-right: 2px solid rgba(201, 169, 89, 0.25);
+  border-radius: 0 6px 0 0;
+}
+
+.flipbook-corner--bl {
+  bottom: 2px;
+  left: 2px;
+  border-bottom: 2px solid rgba(201, 169, 89, 0.25);
+  border-left: 2px solid rgba(201, 169, 89, 0.25);
+  border-radius: 0 0 0 6px;
+}
+
+.flipbook-corner--br {
+  bottom: 2px;
+  right: 2px;
+  border-bottom: 2px solid rgba(201, 169, 89, 0.25);
+  border-right: 2px solid rgba(201, 169, 89, 0.25);
+  border-radius: 0 0 6px 0;
+}
+
+/* ─── Page stack (depth illusion) ─── */
+.flipbook-page-stack {
+  position: absolute;
+  top: 1.25rem;
+  bottom: 1.25rem;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.flipbook-page-stack--left {
+  left: 4px;
+}
+
+.flipbook-page-stack--right {
+  right: 4px;
+}
+
+.flipbook-page-stack__layer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 1px;
+  transition: all 0.3s ease;
+}
+
+/* ─── Page-flip library overrides ─── */
+.flipbook .stf__item {
+  background: #FDF8F0;
+}
+
+.flipbook .stf__block {
+  box-shadow: none !important;
+}
+
+.flipbook .stf__outerShadow {
+  opacity: 0.4;
+}
+
+.flipbook .stf__innerShadow {
+  opacity: 0.25;
+}
+
+/* ─── Cover page styles ─── */
+.flipbook-cover {
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+/* ─── Inner page styles ─── */
+.flipbook-page {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ─── Navigation ─── */
+.flipbook-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  border-top: 1px solid rgba(201, 169, 89, 0.15);
+  padding-top: 0.75rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .flipbook-nav {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+.flipbook-nav__arrows {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.flipbook-nav-btn {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(44, 24, 16, 0.6);
+  border: 1px solid rgba(201, 169, 89, 0.2);
+  border-radius: 50%;
+  color: #FDF8F0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.flipbook-nav-btn:hover:not(:disabled) {
+  background: rgba(201, 169, 89, 0.15);
+  border-color: rgba(201, 169, 89, 0.4);
+}
+
+.flipbook-nav-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.flipbook-nav__counter {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 13px;
+  color: #9B8E82;
+  width: 5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.flipbook-nav__slider-area {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 20rem;
+  justify-content: flex-end;
+}
+
+@media (min-width: 768px) {
+  .flipbook-nav__slider-area {
+    width: auto;
+    max-width: none;
+    flex: 1;
+  }
+}
+
+.flipbook-nav__kbd-hint {
+  display: none;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 10px;
+  color: #6B5E52;
+}
+
+@media (min-width: 768px) {
+  .flipbook-nav__kbd-hint {
+    display: flex;
+  }
+}
+
+.flipbook-nav__slider {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.flipbook-nav__slider-label {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 10px;
+  color: #6B5E52;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+
+/* ─── Range slider ─── */
+.flipbook-range {
+  width: 100%;
+  max-width: 9rem;
+  height: 3px;
+  background: rgba(201, 169, 89, 0.2);
+  border-radius: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.flipbook-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #C9A959;
+  border: 2px solid #1A0E08;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.flipbook-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #C9A959;
+  border: 2px solid #1A0E08;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* ─── Bookmark float ─── */
+@keyframes bookmark-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(0.5deg); }
+}
+
+/* ─── Spin animation for loader ─── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Bounce for hint hand ─── */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
 

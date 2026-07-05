@@ -25,6 +25,7 @@ declare module "next-auth" {
       username: string;
       idCardUrl?: string | null;
     };
+    accessToken?: string;
   }
 }
 
@@ -36,6 +37,7 @@ declare module "next-auth/jwt" {
     username: string;
     idCardUrl?: string | null;
     lastChecked?: number;
+    accessToken?: string;
   }
 }
 
@@ -123,6 +125,7 @@ export const authOptions: NextAuthOptions = {
       }
       
       if (account?.provider === "github" && profile) {
+        token.accessToken = account.access_token;
         const githubProfile = profile as any;
         const githubUsername = githubProfile.login;
         const githubId = githubProfile.id.toString();
@@ -222,6 +225,7 @@ export const authOptions: NextAuthOptions = {
         session.user.status = token.status;
         session.user.username = token.username;
         session.user.idCardUrl = token.idCardUrl || null;
+        session.accessToken = token.accessToken;
       }
       return session;
     },

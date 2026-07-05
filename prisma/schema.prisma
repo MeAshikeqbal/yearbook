@@ -49,12 +49,15 @@ model Memory {
 }
 
 model Bug {
-  id          String   @id @default(uuid())
-  title       String
-  description String   @db.Text
-  status      String   @default("OPEN") // "OPEN", "IN_PROGRESS", "RESOLVED"
-  reporter    String   // display name or username
-  createdAt   DateTime @default(now())
+  id           String   @id @default(uuid())
+  title        String
+  description  String   @db.Text
+  status       String   @default("OPEN") // "OPEN", "IN_PROGRESS", "RESOLVED"
+  reporter     String   // display name or username
+  githubNumber Int?     @unique
+  githubUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
 }
 
 model EmailVerification {
@@ -86,4 +89,14 @@ model RateLimit {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model FeatureFlag {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  description String?  @db.Text
+  value       Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 

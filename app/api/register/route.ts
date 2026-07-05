@@ -3,9 +3,16 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { verifyCsrf } from "@/lib/csrf";
 import { rateLimit } from "@/lib/rate-limiter";
+import { isFeatureEnabled } from "@/lib/features";
 
 export async function POST(req: Request) {
   try {
+    // 0. Check feature flag
+    const registrationEnabled = await isFeatureEnabled("REGISTRATION", true);
+    if (!registrationEnabled) {
+      return NextResponse.json({ error: "Registration is temporarily disabled by administrators." }, { status: 403 });
+    }
+
     // 1. Verify CSRF
     const isCsrfValid = await verifyCsrf(req);
     if (!isCsrfValid) {

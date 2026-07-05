@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/lib/theme-provider"
 import { AuthProvider } from "@/lib/auth-provider"
+import { FeaturesProvider } from "@/components/features-provider"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,15 +31,17 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark-commit"
-            enableSystem={false}
-            themes={["light-code", "dark-commit", "dracula", "matrix-hacker"]}
-            storageKey="yearbook-theme"
-          >
-            {children}
-          </ThemeProvider>
+          <FeaturesProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark-commit"
+              enableSystem={false}
+              themes={["light-code", "dark-commit", "dracula", "matrix-hacker"]}
+              storageKey="yearbook-theme"
+            >
+              {children}
+            </ThemeProvider>
+          </FeaturesProvider>
         </AuthProvider>
       </body>
     </html>
