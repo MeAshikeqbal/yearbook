@@ -7,9 +7,14 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { User, Mail, KeyRound, ArrowRight, Loader2, Sparkles, Eye, EyeOff, X, ShieldAlert, CheckCircle } from "lucide-react"
+import { useFeatures } from "@/components/features-provider"
+import FeatureDisabled from "@/components/ui/feature-disabled"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 export default function RegisterPage() {
   const { status: sessionStatus } = useSession()
+  const { hasFeature } = useFeatures()
   const router = useRouter()
   
   // Form step states
@@ -253,7 +258,15 @@ export default function RegisterPage() {
       </div>
     )
   }
-
+  if (!hasFeature("REGISTRATION")) {
+    return (
+      <>
+        <Header />
+        <FeatureDisabled feature="Account Registrations" />
+        <Footer />
+      </>
+    )
+  }
   if (success) {
     return (
       <div className="flex min-h-svh items-center justify-center bg-background px-4 py-12">

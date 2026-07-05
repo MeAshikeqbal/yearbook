@@ -5,6 +5,10 @@ import { useSession, getCsrfToken } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bug, Plus, X, Loader2, User, HelpCircle, MessageSquare } from "lucide-react"
+import { useFeatures } from "@/components/features-provider"
+import FeatureDisabled from "@/components/ui/feature-disabled"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 interface BugItem {
   id: string
@@ -17,6 +21,7 @@ interface BugItem {
 
 export default function BugsPage() {
   const { data: session } = useSession()
+  const { hasFeature } = useFeatures()
   const [bugs, setBugs] = useState<BugItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -97,8 +102,20 @@ export default function BugsPage() {
   const inProgressBugs = bugs.filter((b) => b.status === "IN_PROGRESS")
   const resolvedBugs = bugs.filter((b) => b.status === "RESOLVED")
 
+  if (!hasFeature("BUGS")) {
+    return (
+      <>
+        <Header />
+        <FeatureDisabled feature="Bug Tracker" />
+        <Footer />
+      </>
+    )
+  }
+
   return (
-    <div className="min-h-svh bg-background text-foreground py-8 md:py-16">
+    <>
+      <Header />
+      <div className="min-h-svh bg-background text-foreground py-8 md:py-16">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 space-y-8">
         
         {/* Header Block */}
@@ -277,7 +294,9 @@ export default function BugsPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+      <Footer />
+    </>
   )
 }
 

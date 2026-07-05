@@ -10,9 +10,11 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useFeatures } from "@/components/features-provider"
 
 export function Header() {
   const { data: session, update: updateSession } = useSession()
+  const { hasFeature } = useFeatures()
   const router = useRouter()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -109,30 +111,38 @@ export function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link
-            href="/browse"
-            className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ./browse
-          </Link>
-          <Link
-            href="/memories"
-            className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-          >
-            <Image className="h-3.5 w-3.5" /> ./mosaic
-          </Link>
-          <Link
-            href="/flipbook"
-            className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-          >
-            <Book className="h-3.5 w-3.5" /> ./flipbook
-          </Link>
-          <Link
-            href="/bugs"
-            className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-          >
-            <Bug className="h-3.5 w-3.5" /> ./bugs
-          </Link>
+          {hasFeature("BROWSE") && (
+            <Link
+              href="/browse"
+              className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ./browse
+            </Link>
+          )}
+          {hasFeature("MEMORIES") && (
+            <Link
+              href="/memories"
+              className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <Image className="h-3.5 w-3.5" /> ./mosaic
+            </Link>
+          )}
+          {hasFeature("FLIPBOOK") && (
+            <Link
+              href="/flipbook"
+              className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <Book className="h-3.5 w-3.5" /> ./flipbook
+            </Link>
+          )}
+          {hasFeature("BUGS") && (
+            <Link
+              href="/bugs"
+              className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <Bug className="h-3.5 w-3.5" /> ./bugs
+            </Link>
+          )}
 
           {(session?.user.role === "ADMIN" || session?.user.role === "MODERATOR") && (
             <Link
@@ -193,34 +203,42 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t bg-background/95 backdrop-blur-md border-border">
           <nav className="container mx-auto max-w-7xl px-4 py-4 flex flex-col gap-3">
-            <Link
-              href="/browse"
-              className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              ./browse
-            </Link>
-            <Link
-              href="/memories"
-              className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center gap-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Image className="h-4 w-4" /> ./mosaic
-            </Link>
-            <Link
-              href="/flipbook"
-              className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center gap-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Book className="h-4 w-4" /> ./flipbook
-            </Link>
-            <Link
-              href="/bugs"
-              className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center gap-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Bug className="h-4 w-4" /> ./bugs
-            </Link>
+            {hasFeature("BROWSE") && (
+              <Link
+                href="/browse"
+                className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                ./browse
+              </Link>
+            )}
+            {hasFeature("MEMORIES") && (
+              <Link
+                href="/memories"
+                className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center gap-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Image className="h-4 w-4" /> ./mosaic
+              </Link>
+            )}
+            {hasFeature("FLIPBOOK") && (
+              <Link
+                href="/flipbook"
+                className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center gap-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Book className="h-4 w-4" /> ./flipbook
+              </Link>
+            )}
+            {hasFeature("BUGS") && (
+              <Link
+                href="/bugs"
+                className="text-sm font-mono text-muted-foreground hover:text-foreground transition-colors py-2 flex items-center gap-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Bug className="h-4 w-4" /> ./bugs
+              </Link>
+            )}
 
             {(session?.user.role === "ADMIN" || session?.user.role === "MODERATOR") && (
               <Link

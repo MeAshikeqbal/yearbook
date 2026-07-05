@@ -3,10 +3,16 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrf } from "@/lib/csrf";
+import { isFeatureEnabled } from "@/lib/features";
 
 // GET /api/bugs - Fetch all bugs
 export async function GET() {
   try {
+    const bugsEnabled = await isFeatureEnabled("BUGS", true);
+    if (!bugsEnabled) {
+      return NextResponse.json({ error: "Bug tracker module is temporarily disabled by administrators." }, { status: 403 });
+    }
+
     const bugs = await prisma.bug.findMany({
       orderBy: {
         createdAt: "desc",
@@ -22,6 +28,11 @@ export async function GET() {
 // POST /api/bugs - Log a new bug
 export async function POST(req: Request) {
   try {
+    const bugsEnabled = await isFeatureEnabled("BUGS", true);
+    if (!bugsEnabled) {
+      return NextResponse.json({ error: "Bug tracker module is temporarily disabled by administrators." }, { status: 403 });
+    }
+
     // CSRF Protection
     const isCsrfValid = await verifyCsrf(req);
     if (!isCsrfValid) {

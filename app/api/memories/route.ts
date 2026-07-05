@@ -3,10 +3,16 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrf } from "@/lib/csrf";
+import { isFeatureEnabled } from "@/lib/features";
 
 // GET /api/memories - Fetch all memories
 export async function GET() {
   try {
+    const memoriesEnabled = await isFeatureEnabled("MEMORIES", true);
+    if (!memoriesEnabled) {
+      return NextResponse.json({ error: "Memories module is temporarily disabled by administrators." }, { status: 403 });
+    }
+
     const memories = await prisma.memory.findMany({
       orderBy: {
         date: "desc",
@@ -22,6 +28,11 @@ export async function GET() {
 // POST /api/memories - Create a new memory after successful R2 upload
 export async function POST(req: Request) {
   try {
+    const memoriesEnabled = await isFeatureEnabled("MEMORIES", true);
+    if (!memoriesEnabled) {
+      return NextResponse.json({ error: "Memories module is temporarily disabled by administrators." }, { status: 403 });
+    }
+
     // CSRF Protection
     const isCsrfValid = await verifyCsrf(req);
     if (!isCsrfValid) {

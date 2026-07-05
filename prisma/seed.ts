@@ -82,6 +82,26 @@ async function main() {
     console.log(`   Password: student123`);
   }
 
+  // Create default feature flags
+  const defaultFlags = [
+    { key: "FLIPBOOK", value: true, description: "Physical flipbook yearbook spread viewer" },
+    { key: "MEMORIES", value: true, description: "Class snapshot mosaic grid and memory uploads" },
+    { key: "BUGS", value: true, description: "Class issue and bug reporting board" },
+    { key: "BROWSE", value: true, description: "Browse and search student profiles" },
+    { key: "REGISTRATION", value: true, description: "New student account registrations and signups" },
+    { key: "PROFILE_EDITING", value: true, description: "Customizing individual profiles, bios, custom CSS and stats" },
+  ];
+
+  console.log("Seeding default feature flags...");
+  for (const flag of defaultFlags) {
+    await prisma.featureFlag.upsert({
+      where: { key: flag.key },
+      update: {}, // do not overwrite value if already exists
+      create: flag,
+    });
+  }
+  console.log("✅ Seeding feature flags completed.");
+
   await prisma.$disconnect();
   console.log("Seeding completed successfully.");
 }

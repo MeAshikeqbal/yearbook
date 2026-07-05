@@ -8,6 +8,10 @@ import {
   Camera, Calendar, MapPin, User, Plus, X, 
   Loader2, Image as ImageIcon, Search, ChevronRight 
 } from "lucide-react"
+import { useFeatures } from "@/components/features-provider"
+import FeatureDisabled from "@/components/ui/feature-disabled"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 interface Memory {
   id: string
@@ -22,6 +26,7 @@ interface Memory {
 
 export default function MemoriesPage() {
   const { data: session } = useSession()
+  const { hasFeature } = useFeatures()
   const [memories, setMemories] = useState<Memory[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -152,8 +157,20 @@ export default function MemoriesPage() {
 
   const isVerified = session && (session.user.status === "APPROVED" || session.user.role === "ADMIN")
 
+  if (!hasFeature("MEMORIES")) {
+    return (
+      <>
+        <Header />
+        <FeatureDisabled feature="Memory Mosaic" />
+        <Footer />
+      </>
+    )
+  }
+
   return (
-    <div className="min-h-svh bg-background text-foreground py-8 md:py-16">
+    <>
+      <Header />
+      <div className="min-h-svh bg-background text-foreground py-8 md:py-16">
       <div className="container mx-auto max-w-7xl px-4 md:px-6 space-y-8">
         
         {/* Header Block */}
@@ -424,6 +441,8 @@ export default function MemoriesPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+      <Footer />
+    </>
   )
 }
