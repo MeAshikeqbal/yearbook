@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrf } from "@/lib/csrf";
 import { isFeatureEnabled } from "@/lib/features";
+import { createGithubIssue } from "@/lib/github";
 
 // GET /api/bugs - Fetch all bugs
 export async function GET() {
@@ -50,16 +51,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    let githubNumber: number | null = null;
+    let githubUrl: string | null = null;
+    let githubSynced = false;
+
+    const token = session.accessToken || process.env.GITHUB_PAT || process.env.GITHUB_TOKEN;
+    if (token) {
+      try {
+        const ghIssue = await createGithubIssue(title, description, token);
+        githubNumber = ghIssue.number;
+        githubUrl = ghIssue.htmlUrl;
+        githubSynced = true;
+      } catch (err) {
+        console.error("Failed to create issue on GitHub, falling back to local database:", err);
+      }
+    }
+
     const bug = await prisma.bug.create({
       data: {
         title,
         description,
         status: status || "OPEN",
         reporter,
+        githubNumber,
+        githubUrl,
       },
     });
 
-    return NextResponse.json({ success: true, bug }, { status: 201 });
+    return NextResponse.json({ success: true, bug, githubSynced }, { status: 201 });
 
   } catch (err) {
     console.error("Create bug error:", err);

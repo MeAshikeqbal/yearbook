@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { useSession, getCsrfToken } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bug, Plus, X, Loader2, User, HelpCircle, MessageSquare } from "lucide-react"
+import { Bug, Plus, X, Loader2, User, HelpCircle, MessageSquare, RefreshCw, Github } from "lucide-react"
 import { useFeatures } from "@/components/features-provider"
 import FeatureDisabled from "@/components/ui/feature-disabled"
 import { Header } from "@/components/header"
@@ -17,6 +17,8 @@ interface BugItem {
   status: string // "OPEN", "IN_PROGRESS", "RESOLVED"
   reporter: string
   createdAt: string
+  githubNumber?: number
+  githubUrl?: string
 }
 
 export default function BugsPage() {
@@ -24,6 +26,7 @@ export default function BugsPage() {
   const { hasFeature } = useFeatures()
   const [bugs, setBugs] = useState<BugItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
 
   // Report modal state
   const [modalOpen, setModalOpen] = useState(false)
@@ -33,6 +36,28 @@ export default function BugsPage() {
   const [reporter, setReporter] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
+
+  const handleSync = async () => {
+    try {
+      setSyncing(true)
+      const csrfToken = await getCsrfToken();
+      const res = await fetch("/api/bugs/sync", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken || "",
+        },
+      })
+      if (!res.ok) {
+        throw new Error("Sync failed")
+      }
+      await fetchBugs()
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   useEffect(() => {
     fetchBugs()
@@ -126,9 +151,25 @@ export default function BugsPage() {
               Class memory issues, lab slips, and semester bugs board
             </p>
           </div>
-          <Button onClick={() => setModalOpen(true)} size="sm" className="gap-1 font-mono text-xs">
-            <Plus className="h-4 w-4" /> report_bug
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSync}
+              disabled={syncing}
+              variant="outline"
+              size="sm"
+              className="gap-1 font-mono text-xs border-border text-foreground hover:bg-muted"
+            >
+              {syncing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              sync_github
+            </Button>
+            <Button onClick={() => setModalOpen(true)} size="sm" className="gap-1 font-mono text-xs">
+              <Plus className="h-4 w-4" /> report_bug
+            </Button>
+          </div>
         </div>
 
         {loading ? (
@@ -204,6 +245,15 @@ export default function BugsPage() {
             <div className="border-b border-border pb-3">
               <h3 className="text-lg font-semibold font-mono flex items-center gap-1.5"><Bug className="h-5 w-5 text-destructive" /> Report Batch Bug</h3>
               <p className="text-xs text-muted-foreground font-mono mt-1">Log a funny memory, exam cry or lab incident</p>
+              {session?.accessToken ? (
+                <p className="text-4xs text-emerald-500 font-mono mt-1 flex items-center gap-1">
+                  <Github className="h-3 w-3 animate-pulse" /> Syncing report directly to GitHub issues (@{session.user?.username})
+                </p>
+              ) : (
+                <p className="text-4xs text-amber-500 font-mono mt-1 flex items-center gap-1">
+                  <HelpCircle className="h-3 w-3" /> Report will be saved locally. Login via GitHub to sync issues.
+                </p>
+              )}
             </div>
 
             {error && (
@@ -318,9 +368,22 @@ function BugCard({ bug, borderColor }: { bug: BugItem; borderColor: string }) {
         <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
           {bug.description}
         </p>
-        <div className="flex items-center gap-1.5 text-3xs font-mono text-foreground/80 border-t border-border/40 pt-2">
-          <User className="h-3.5 w-3.5 text-primary" />
-          <span>Reporter: <strong className="text-foreground">{bug.reporter}</strong></span>
+        <div className="flex items-center justify-between gap-1.5 text-3xs font-mono text-foreground/80 border-t border-border/40 pt-2">
+          <div className="flex items-center gap-1.5">
+            <User className="h-3.5 w-3.5 text-primary" />
+            <span>Reporter: <strong className="text-foreground">{bug.reporter}</strong></span>
+          </div>
+          {bug.githubUrl && (
+            <a
+              href={bug.githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-sky-500 hover:text-sky-400 font-bold transition-colors"
+            >
+              <Github className="h-3 w-3" />
+              <span>#{bug.githubNumber}</span>
+            </a>
+          )}
         </div>
       </CardContent>
     </Card>
