@@ -97,7 +97,7 @@ export default async function Home() {
   return (
     <>
       <Header />
-      <main className="space-y-4 md:space-y-8 bg-background">
+      <main className="space-y-4 md:space-y-8 bg-background overflow-x-hidden">
         <HeroSection stats={stats} recentClassmates={recentClassmates} />
         <FeaturesSection />
         <FlipbookCTA />

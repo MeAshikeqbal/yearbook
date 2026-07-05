@@ -38,9 +38,9 @@ export function Footer() {
       <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       
       <div className="container mx-auto max-w-7xl px-4 md:px-6 py-12 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-8 mb-12">
           {/* Logo & Brand Column */}
-          <div className="md:col-span-5 space-y-4">
+          <div className="sm:col-span-12 md:col-span-5 space-y-4">
             <Link 
               href="/" 
               className="flex items-center gap-2 font-black text-lg md:text-xl text-foreground font-mono tracking-tight hover:opacity-85 transition-opacity"

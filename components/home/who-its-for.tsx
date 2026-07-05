@@ -6,7 +6,7 @@ export function WhoItsFor() {
   return (
     <section className="container mx-auto max-w-7xl px-4 md:px-6 py-12 md:py-20 relative">
       <div className="max-w-3xl mx-auto">
-        <div className="relative rounded-lg border-2 border-dashed border-accent/30 bg-accent/5 p-8 md:p-10 text-center font-mono space-y-6 overflow-hidden group">
+        <div className="relative rounded-lg border-2 border-dashed border-accent/30 bg-accent/5 p-4 sm:p-8 md:p-10 text-center font-mono space-y-6 overflow-hidden group">
           
           {/* Subtle background lock element */}
           <div className="absolute -right-6 -bottom-6 w-24 h-24 text-accent/10 pointer-events-none select-none group-hover:scale-110 transition-transform duration-300">
@@ -21,8 +21,8 @@ export function WhoItsFor() {
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-lg md:text-xl font-bold text-foreground">
-              [ AUTHORIZATION_SCOPE: SKF_CLASS_OF_2026 ]
+            <h3 className="text-xs sm:text-base md:text-xl font-bold text-foreground tracking-tight whitespace-normal break-words">
+              [ AUTHORIZATION_SCOPE:<br className="sm:hidden" /> SKF_CLASS_OF_2026 ]
             </h3>
             <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed">
               This system registry is restricted to students belonging to the <span className="text-accent font-semibold">SKF Class of 2026</span>.

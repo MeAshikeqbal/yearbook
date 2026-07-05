@@ -81,7 +81,7 @@ export function HeroSection({ stats, recentClassmates }: HeroSectionProps) {
 
             {/* Headline */}
             <div className="space-y-4">
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground font-mono leading-none">
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground font-mono leading-none">
                 const graduation = <br />
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent block mt-2 filter drop-shadow-[0_2px_10px_rgba(var(--primary),0.15)]">
                   Promise.resolve();
@@ -119,7 +119,7 @@ export function HeroSection({ stats, recentClassmates }: HeroSectionProps) {
             </div>
 
             {/* Dynamic mini database stats row */}
-            <div className="grid grid-cols-3 gap-4 border-t border-border/80 pt-6 max-w-lg font-mono">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 border-t border-border/80 pt-6 max-w-lg font-mono">
               <div>
                 <div className="text-2xl font-bold text-foreground">{stats.classmatesCount}</div>
                 <div className="text-2xs text-muted-foreground uppercase tracking-wider">classmates</div>
@@ -138,7 +138,7 @@ export function HeroSection({ stats, recentClassmates }: HeroSectionProps) {
 
           {/* Right Column: Code Terminal Dashboard */}
           <div className="lg:col-span-6 animate-fade-in-up delay-200">
-            <div className="relative rounded-lg border border-border bg-card/85 backdrop-blur-md shadow-2xl overflow-hidden font-mono text-sm group/terminal max-w-xl mx-auto">
+            <div className="relative w-full rounded-lg border border-border bg-card/85 backdrop-blur-md shadow-2xl overflow-hidden font-mono text-sm group/terminal max-w-xl mx-auto">
               
               {/* Terminal Window Header */}
               <div className="flex items-center justify-between px-4 py-3 bg-muted/60 border-b border-border select-none">
@@ -158,10 +158,10 @@ export function HeroSection({ stats, recentClassmates }: HeroSectionProps) {
               <div className="p-5 space-y-4 min-h-[340px] text-xs leading-relaxed select-text">
                 
                 {/* Typing Line */}
-                <div className="flex items-center gap-1 text-foreground">
+                <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 text-foreground break-all">
                   <span className="text-accent font-semibold">visitor@skf2026:~$</span>
-                  <span>{typedText}</span>
-                  <span className="w-1.5 h-4 bg-primary animate-typing-cursor inline-block" />
+                  <span className="break-all">{typedText}</span>
+                  <span className="w-1.5 h-4 bg-primary animate-typing-cursor inline-block align-middle" />
                 </div>
 
                 {/* Simulated Program Output */}
@@ -204,8 +204,8 @@ export function HeroSection({ stats, recentClassmates }: HeroSectionProps) {
                                 className="w-6 h-6 rounded-full border border-border/80 object-cover"
                               />
                               <div>
-                                <div className="font-semibold text-foreground flex items-center gap-1">
-                                  {student.name}
+                                <div className="font-semibold text-foreground flex flex-wrap items-baseline gap-x-1">
+                                  <span>{student.name}</span>
                                   <span className="text-3xs text-muted-foreground font-normal">@{student.username}</span>
                                 </div>
                                 <div className="text-3xs text-muted-foreground">{student.role}</div>
