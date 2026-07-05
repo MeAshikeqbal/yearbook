@@ -342,9 +342,27 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
         <MatrixTransition onComplete={() => setShowMatrixTransition(false)} />
       )}
 
+      {/* MOBILE WARNING FOR ADVANCED IDE */}
+      {advanceMode && !showMatrixTransition && (
+        <div className="fixed inset-0 z-50 bg-[#1e1e1e] flex md:hidden flex-col items-center justify-center p-6 text-center text-gray-300 font-mono space-y-5 select-none">
+          <Terminal className="h-12 w-12 text-purple-500 animate-pulse" />
+          <h3 className="text-base font-bold text-white uppercase tracking-wider">[ACCESS_RESTRICTED]</h3>
+          <p className="text-xs leading-relaxed max-w-xs text-neutral-400">
+            The Advanced Profile IDE is optimized for desktop viewports. Please switch to a desktop screen to edit code.
+          </p>
+          <Button
+            type="button"
+            onClick={handleToggleAdvanceMode}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-mono text-xs h-9 px-4 rounded-lg cursor-pointer"
+          >
+            Switch to Standard Mode
+          </Button>
+        </div>
+      )}
+
       {/* FULL SCREEN ADVANCED IDE LAYOUT */}
       {advanceMode && !showMatrixTransition && (
-        <div className="fixed inset-0 z-50 bg-[#1e1e1e] flex flex-col text-gray-300 font-mono select-none">
+        <div className="fixed inset-0 z-50 bg-[#1e1e1e] hidden md:flex flex-col text-gray-300 font-mono select-none">
           
           {/* Header Bar */}
           <div className="bg-[#2d2d2d] border-b border-[#1e1e1e] h-12 flex items-center justify-between px-4">
@@ -775,8 +793,8 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
             </div>
             
             <div className="flex items-center gap-3">
-              {/* Premium Toggle Switch in Normal Layout */}
-              <div className="flex items-center gap-2.5 bg-neutral-900/60 border border-white/5 px-3 py-1.5 rounded-xl select-none transition-all hover:border-white/10">
+              {/* Premium Toggle Switch in Normal Layout - Desktop Only */}
+              <div className="hidden md:flex items-center gap-2.5 bg-neutral-900/60 border border-white/5 px-3 py-1.5 rounded-xl select-none transition-all hover:border-white/10">
                 <span className="text-xs font-mono text-neutral-400 font-semibold">Advanced Mode</span>
                 <button
                   type="button"

@@ -3,6 +3,9 @@
 import React, { useState } from "react"
 import Link from "next/link"
 import { Terminal, Cpu, Code2, ShieldAlert, ArrowLeft, Copy, Check, BookOpen, Layers, Network } from "lucide-react"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
+
 
 export default function DocsPage() {
   const [activeTab, setActiveTab] = useState<"api" | "css">("api")
@@ -186,7 +189,9 @@ export default function DocsPage() {
   ]
 
   return (
-    <div className="min-h-svh bg-background text-foreground py-8 md:py-16 font-mono text-sm leading-relaxed relative">
+    <>
+      <Header />
+      <div className="min-h-svh bg-background text-foreground py-8 md:py-16 font-mono text-sm leading-relaxed relative">
       
       {/* Background glowing rings */}
       <div className="absolute top-20 left-1/3 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none z-0" />
@@ -494,5 +499,7 @@ export default function DocsPage() {
 
       </div>
     </div>
+    <Footer />
+  </>
   )
 }

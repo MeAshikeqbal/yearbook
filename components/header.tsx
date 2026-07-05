@@ -106,7 +106,7 @@ export function Header() {
         <Link href="/" className="flex items-center gap-2 font-bold text-lg md:text-xl text-foreground font-mono">
           <BookOpen className="h-5 w-5 md:h-6 md:w-6 text-primary" />
           <span className="hidden sm:inline">class_of_2026</span>
-          <span className="sm:hidden">c_o_2026</span>
+          <span className="sm:hidden">CS_2026</span>
         </Link>
 
         {/* Desktop Navigation */}

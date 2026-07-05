@@ -30,7 +30,7 @@ export function StudentCard({ student }: StudentCardProps) {
     : ""
 
   return (
-    <Link href={`/profile/${student.username}`} className="block w-full group relative">
+    <Link href={`/profile/${student.username}`} className="block w-full max-w-xs mx-auto group relative">
       {scopedCss && (
         <style dangerouslySetInnerHTML={{ __html: scopedCss }} />
       )}

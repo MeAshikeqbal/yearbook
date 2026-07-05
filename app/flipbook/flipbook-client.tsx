@@ -612,6 +612,28 @@ export default function FlipbookClient({
   const [loading, setLoading] = useState(true)
   const [pageFlipInstance, setPageFlipInstance] = useState<PageFlip | null>(null)
   const [currentPage, setCurrentPage] = useState(0)
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  )
+
+  // Listen to window resize for responsiveness
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    
+    let timeoutId: NodeJS.Timeout
+    const handleResize = () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => {
+        setWindowWidth(window.innerWidth)
+      }, 150)
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => {
+      window.removeEventListener("resize", handleResize)
+      clearTimeout(timeoutId)
+    }
+  }, [])
   const [totalPages, setTotalPages] = useState(0)
   const [isFullPage, setIsFullPage] = useState(false)
   const [isNativeFullscreen, setIsNativeFullscreen] = useState(false)
@@ -769,7 +791,7 @@ export default function FlipbookClient({
         try { instance.destroy() } catch { /* ignore */ }
       }
     }
-  }, [students, memories, isFullPage])
+  }, [students, memories, isFullPage, windowWidth])
 
   /* ──── Data pagination ──── */
 
