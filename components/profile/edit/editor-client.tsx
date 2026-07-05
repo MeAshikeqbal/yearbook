@@ -978,7 +978,7 @@ export default function ProfileEditorClient({ initialData }: ProfileEditorClient
                 stats={stats}
                 blocks={blocks}
                 advanceMode={advanceMode}
-                customHtml={customHtml}
+                customHtml={previewHtml}
                 customJs={customJs}
               />
             </div>
