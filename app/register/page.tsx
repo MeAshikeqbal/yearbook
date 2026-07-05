@@ -35,6 +35,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [certifiedId, setCertifiedId] = useState(false)
 
   const [passwordStrength, setPasswordStrength] = useState({
     score: 0,
@@ -185,6 +187,12 @@ export default function RegisterPage() {
       return
     }
 
+    if (!agreedToTerms || !certifiedId) {
+      setError("You must accept the Terms of Service & Privacy Policy and certify your Student ID.")
+      setLoading(false)
+      return
+    }
+
     try {
       const csrfToken = await getCsrfToken()
 
@@ -234,6 +242,7 @@ export default function RegisterPage() {
           password,
           role,
           idCardUrl: publicUrl,
+          consent: agreedToTerms && certifiedId,
         }),
       })
 
@@ -544,7 +553,42 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-10 font-mono text-xs" disabled={loading}>
+              {/* Legal Consent Checkboxes */}
+              <div className="space-y-3 pt-2 pb-1 border-t border-border/30">
+                <label className="flex items-start gap-2.5 cursor-pointer group select-none">
+                  <input
+                    type="checkbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    className="mt-1 h-3.5 w-3.5 rounded-xs border border-input bg-background/50 text-primary focus:ring-0 focus:ring-offset-0 accent-primary"
+                    disabled={loading}
+                    required
+                  />
+                  <span className="text-[11px] font-mono text-muted-foreground leading-normal group-hover:text-foreground transition-colors">
+                    I agree to the{" "}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">[Terms of Service]</a>
+                    {" "}and{" "}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">[Privacy Policy]</a>,
+                    and consent to my profile details being displayed publicly.
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2.5 cursor-pointer group select-none">
+                  <input
+                    type="checkbox"
+                    checked={certifiedId}
+                    onChange={(e) => setCertifiedId(e.target.checked)}
+                    className="mt-1 h-3.5 w-3.5 rounded-xs border border-input bg-background/50 text-primary focus:ring-0 focus:ring-offset-0 accent-primary"
+                    disabled={loading}
+                    required
+                  />
+                  <span className="text-[11px] font-mono text-muted-foreground leading-normal group-hover:text-foreground transition-colors">
+                    I certify that the uploaded Student ID photo belongs to me and represents my own student record.
+                  </span>
+                </label>
+              </div>
+
+              <Button type="submit" className="w-full h-10 font-mono text-xs" disabled={loading || !agreedToTerms || !certifiedId}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> processing_registration...
