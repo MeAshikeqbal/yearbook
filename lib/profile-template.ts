@@ -305,7 +305,6 @@ export function generateProfileTemplate(options: GenerateTemplateOptions) {
   aspect-ratio: 3 / 4.2;
   border-radius: 1rem;
   perspective: 1000px;
-  touch-action: none;
 }
 
 /* Background Neon Aura Glow */
