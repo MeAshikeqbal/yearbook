@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { verifyCsrf } from "@/lib/csrf"
+import { sendWelcomeEmail } from "@/lib/email"
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -31,6 +32,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (!targetUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
+
+    const shouldSendWelcome = status === "APPROVED" && targetUser.status !== "APPROVED";
 
     // Guardrail: MODERATOR cannot modify ADMIN or other MODERATOR accounts
     if (session.user.role === "MODERATOR" && targetUser.role !== "STUDENT") {
@@ -108,6 +111,21 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         reason: `Updated user profile/settings. Details: ${JSON.stringify(userUpdateData)} / ${role ? `Role to ${role}` : ""} ${status ? `Status to ${status}` : ""}`,
       },
     })
+
+    if (shouldSendWelcome) {
+      const updatedUser = await prisma.user.findUnique({
+        where: { id },
+        include: { studentProfile: true }
+      });
+      if (updatedUser) {
+        await sendWelcomeEmail({
+          email: updatedUser.email,
+          name: updatedUser.studentProfile?.name || "Student",
+          username: updatedUser.studentProfile?.username || "student",
+          role: updatedUser.studentProfile?.role || "CSE Student",
+        });
+      }
+    }
 
     return NextResponse.json({ success: true, message: "User updated successfully" })
   } catch (error) {

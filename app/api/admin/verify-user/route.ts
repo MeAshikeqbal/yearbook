@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyCsrf } from "@/lib/csrf";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -68,6 +69,15 @@ export async function POST(req: Request) {
         where: { id: userId },
         data: { status: "APPROVED" },
       });
+
+      // Send welcome email matching website theme
+      await sendWelcomeEmail({
+        email: targetUser.email,
+        name: targetUser.studentProfile?.name || "Student",
+        username: targetUser.studentProfile?.username || "student",
+        role: targetUser.studentProfile?.role || "CSE Student",
+      });
+
       return NextResponse.json({ success: true, message: "User approved successfully" });
     } else if (action === "REJECT") {
       await prisma.user.update({
