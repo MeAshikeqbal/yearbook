@@ -104,7 +104,7 @@ export function ProfileCard({
 
   return (
     <div
-      className={`relative w-full aspect-[3/4.2] rounded-2xl select-none touch-none ${className}`}
+      className={`relative w-full aspect-[3/4.2] rounded-2xl select-none ${className}`}
       onPointerMove={handlePointerMove}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
