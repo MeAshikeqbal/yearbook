@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Github, Linkedin, Edit3, ArrowLeft, Terminal, Cpu, Bug, Coffee, Calendar, Layers, Code2 } from "lucide-react"
 import ProfileCard from "@/components/ui/ProfileCard"
 import { ShortcodeParser } from "@/components/profile/shortcode-parser"
+import { getAvatarExtension } from "@/lib/profile-template"
 
 interface Student {
   username: string
@@ -28,6 +29,33 @@ interface ProfileViewProps {
 
 export function ProfileView({ student, isOwner, isApproved }: ProfileViewProps) {
   const statsObj = (student.stats as Record<string, any>) || {}
+
+  const avatarExt = React.useMemo(() => {
+    return student.avatarUrl ? getAvatarExtension(student.avatarUrl) : "png"
+  }, [student.avatarUrl])
+
+  const processedHtml = React.useMemo(() => {
+    const customHtml = statsObj.customHtml
+    if (!customHtml) return ""
+    return customHtml.replace(
+      new RegExp(`src=(['"])(\\./)?me\\.${avatarExt}\\1`, "g"),
+      `src=$1/profile/${student.username}/me.${avatarExt}$1`
+    )
+  }, [statsObj.customHtml, student.username, avatarExt])
+
+  const processedCss = React.useMemo(() => {
+    const customCss = statsObj.customCss || student.customCss
+    if (!customCss) return ""
+    return customCss
+      .replace(
+        new RegExp(`url\\((['"])(\\./)?me\\.${avatarExt}\\1\\)`, "g"),
+        `url($1/profile/${student.username}/me.${avatarExt}$1)`
+      )
+      .replace(
+        new RegExp(`url\\((\\./)?me\\.${avatarExt}\\)`, "g"),
+        `url(/profile/${student.username}/me.${avatarExt})`
+      )
+  }, [statsObj.customCss, student.customCss, student.username, avatarExt])
 
   // Script evaluator side effect for Advanced JS Code execution
   useEffect(() => {
@@ -81,14 +109,11 @@ export function ProfileView({ student, isOwner, isApproved }: ProfileViewProps) 
     return (
       <div className="min-h-svh relative student-profile-wrapper bg-background text-foreground">
         
-        {/* Base tag to resolve relative assets (e.g. me.png) to this user's dynamic directory */}
-        <base href={`/profile/${student.username}/`} />
-        
         {/* Custom stylesheet override */}
         {(student.customCss || statsObj.customCss) && (
           <style
             dangerouslySetInnerHTML={{
-              __html: statsObj.customCss || student.customCss || "",
+              __html: processedCss,
             }}
           />
         )}
@@ -96,7 +121,7 @@ export function ProfileView({ student, isOwner, isApproved }: ProfileViewProps) 
         {/* Render student custom HTML layout structure directly in the flow */}
         <div
           dangerouslySetInnerHTML={{
-            __html: statsObj.customHtml || "<div className='p-8 font-mono text-xs'>No HTML layout compiled.</div>"
+            __html: processedHtml || "<div className='p-8 font-mono text-xs'>No HTML layout compiled.</div>"
           }}
         />
 
@@ -126,7 +151,7 @@ export function ProfileView({ student, isOwner, isApproved }: ProfileViewProps) 
       {student.customCss && (
         <style
           dangerouslySetInnerHTML={{
-            __html: student.customCss,
+            __html: processedCss,
           }}
         />
       )}

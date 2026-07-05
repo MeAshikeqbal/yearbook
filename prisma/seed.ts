@@ -6,25 +6,9 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 import { PrismaClient } from "@prisma/client";
-import { Pool } from "pg";
-import { PrismaPg } from "@prisma/adapter-pg";
 import * as bcrypt from "bcryptjs";
 
-// Connection string with database fallback
-const connectionString = process.env.DATABASE_URL!;
-
-const cleanConnectionString = connectionString
-  .replace("&sslrootcert=system", "")
-  .replace("?sslrootcert=system", "");
-
-const pool = new Pool({
-  connectionString: cleanConnectionString,
-  ssl: connectionString.includes("sslmode=") || connectionString.includes("sslrootcert=")
-    ? { rejectUnauthorized: false }
-    : undefined
-});
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
   console.log("Seeding database...");
@@ -99,7 +83,6 @@ async function main() {
   }
 
   await prisma.$disconnect();
-  await pool.end();
   console.log("Seeding completed successfully.");
 }
 
