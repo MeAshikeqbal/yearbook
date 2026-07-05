@@ -27,7 +27,7 @@ const securityHeaders = [
   },
   {
     key: "Content-Security-Policy",
-    value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: *.amazonaws.com *.r2.cloudflarestorage.com *.homecave.site images.unsplash.com placehold.co avatars.githubusercontent.com; connect-src 'self' api.github.com *.homecave.site localhost:3000 *.amazonaws.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
+    value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: *.amazonaws.com *.r2.cloudflarestorage.com *.homecave.site images.unsplash.com placehold.co avatars.githubusercontent.com api.dicebear.com; connect-src 'self' api.github.com *.homecave.site localhost:3000 *.amazonaws.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
   },
 ];
 
